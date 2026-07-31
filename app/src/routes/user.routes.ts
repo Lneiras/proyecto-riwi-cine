@@ -23,8 +23,9 @@ const router = Router();
  * Crea un nuevo usuario en la base de datos.
  * 
  * Request Body:
- *  - `name`: string (obligatorio)
- *  - `email`: string (obligatorio, único)
+ * - `name`: string (obligatorio)
+ * - `email`: string (obligatorio, único)
+ * - `password`: string (obligatorio)
  * 
  * Response:
  *  - 201 Created: Retorna el usuario creado en formato JSON.
@@ -45,6 +46,7 @@ const router = Router();
  *             required:
  *               - name
  *               - email
+ *               - password
  *             properties:
  *               name:
  *                 type: string
@@ -52,6 +54,9 @@ const router = Router();
  *               email:
  *                 type: string
  *                 example: "john.doe@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "abc123"
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente
@@ -61,6 +66,7 @@ const router = Router();
  *               id: 3
  *               name: "John Doe"
  *               email: "john.doe@example.com"
+ *               password: "abc123"
  *       400:
  *         description: Datos inválidos
  *         content:
@@ -99,9 +105,11 @@ router.post("/", createUser);
  *               - id: 1
  *                 name: "John Doe"
  *                 email: "john.doe@example.com"
+ *                 password: "abc123"
  *               - id: 2
  *                 name: "Jane Doe"
  *                 email: "john.doe@example.com"
+ *                 password: "abc123"
  *       400:
  *         description: Solicitud inválida
  *         content:

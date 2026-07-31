@@ -15,7 +15,6 @@ import userRoutes from "./routes/user.routes";
 import cors from "cors";
 import { corsOptions } from "./config/cors";
 
-
 const app = express();
 
 app.use(express.json());
