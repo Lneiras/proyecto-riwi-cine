@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-
 import userService from "../services/user.service";
 import { CreateUserDto } from "../dto/create-user.dto";
 
@@ -158,3 +157,74 @@ export const getUsers = async (_req: Request, res: Response): Promise<Response> 
     }
 
 };
+
+export const getUsersbyId = async (req: Request, res: Response): Promise<Response> => {
+
+    try {
+
+        const { id } = req.params;
+
+        const user = await userService.findById(parseInt(id));
+
+        if (!user) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+
+        return res.status(200).json(user);
+
+    } catch (error: any) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+};
+
+
+export const Auth = async (req: Request, res: Response): Promise<Response> => {
+
+    try {
+
+        const { email, password } = req.body;
+
+        const user = await userService.Auth(email, password);
+
+        if (!user) {
+            return res.status(401).json({ error: "Credenciales inválidas" });
+        }
+
+        return res.status(200).json(user);
+
+    }
+    catch (error: any) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+};
+
+
+export const health = async (_req: Request, res: Response): Promise<Response> => {
+
+    try {
+
+        const healthStatus = await userService.health();
+
+        return res.status(200).json({ status: healthStatus });
+
+    } catch (error: any) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+};
+
+

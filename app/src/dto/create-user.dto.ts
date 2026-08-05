@@ -18,12 +18,13 @@
  *
  * @property {string} name - Nombre completo del usuario.
  * @property {string} email - Dirección de correo electrónico única del usuario.
- * @property {string} password - Contraseña.
- *
+ * @property {string} password - Contraseña del usuario.
+ * 
  * @example
  * const dto: CreateUserDto = {
- *   name: "David Mtz",s
- *   email: "david@example.com"
+ *   name: "David Mtz",
+ *   email: "david@example.com",
+ *   password: "password123"
  * };
  */
 
@@ -33,11 +34,12 @@ export interface CreateUserDto {
      * Nombre completo del usuario.
      */
     name: string;
+
     /**
      * Correo electrónico del usuario.
      */
     email: string;
 
-    password : string;
+    password: string;
 
 }

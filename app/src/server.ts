@@ -9,11 +9,9 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
-
+import countryRoutes from "./routes/country.routes";
 import userRoutes from "./routes/user.routes";
 
-import cors from "cors";
-import { corsOptions } from "./config/cors";
 
 const app = express();
 
@@ -21,11 +19,8 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/users", userRoutes);
-
+app.use("/api/countries", countryRoutes);
 // Swagger
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// habilitacion de CORS en express
-app.use(cors(corsOptions));
 
 export default app;
