@@ -1,5 +1,4 @@
 import CityService from '../services/cities.service';
-import City from '../models/cities.model';
 import { Request, Response } from 'express';
 
 export const getAllCities = async (_req: Request, res: Response): Promise<Response> => {
@@ -11,7 +10,7 @@ export const getAllCities = async (_req: Request, res: Response): Promise<Respon
         }
 
         // si en el frontend meten una ciudad que no existe en la base de datos:
-        const invalidCities = cities.filter((city: City) => !city.id);
+        const invalidCities = cities.filter((city) => !city.id);
 
         if (invalidCities.length > 0) {
             return res.status(400).json({ error: "Some cities are invalid", invalidCities });

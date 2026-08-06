@@ -1,4 +1,4 @@
-import { getCountries } from "../controllers/country.controller";
+import { getCountries, getCountryById } from "../controllers/country.controller";
 import { Router } from "express";
 
 
@@ -40,5 +40,49 @@ const router = Router();
 
 
 router.get("/", getCountries);
+
+/**
+ * GET /countries/:id
+ * -------------------
+ * Obtiene un país específico por su ID.
+ * Response:
+ *  - 200 OK: Devuelve el país en formato JSON.
+ *  - 404 Not Found: Si no se encuentra el país con el ID proporcionado.
+ *  - 500 Internal Server Error: En caso de error en la consulta.
+ *
+ * @swagger
+ * /api/countries/{id}:
+ *   get:
+ *     summary: Obtener un país por su ID
+ *     tags: [Countries]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     description: ID del país a obtener
+ *     responses:
+ *       200:
+ *         description: País obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: "Colombia"
+ *       404:
+ *         description: País no encontrado
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Country not found"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Error al obtener el país"
+*/
+router.get("/:id", getCountryById);
 
 export default router;
