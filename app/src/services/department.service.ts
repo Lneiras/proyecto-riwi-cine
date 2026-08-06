@@ -1,11 +1,12 @@
 import Department from "../models/departament.model";
+import repository from "../repositories/department.repository";
 
 
 class DepartmentService {
 
     async findDepartments(): Promise<Department[]> {
 
-        return await Department.findAll();
+        return await repository.findDeparments();
 
     }
 
