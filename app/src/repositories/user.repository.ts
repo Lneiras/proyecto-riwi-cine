@@ -43,7 +43,6 @@ class UserRepository implements IUserRepository {
     }
 
     async findUserByLocation(location: string): Promise<User[] | null> {
-        console.log("repository location:", typeof location, location)
         const users = await User.findAll({ include: [{ model: City, where: { name: location } }] });
         return users.length > 0 ? users : null;
     }
