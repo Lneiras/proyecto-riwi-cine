@@ -1,6 +1,5 @@
 # Environments
 .env
-.env.*
 venv/
 venv.*
 ENV/
@@ -94,5 +93,7 @@ reports/
 *.bak
 *.orig
 
-# Package
-package-lock.json
+#  auditoria 
+audit.txt
+
+
