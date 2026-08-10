@@ -13,7 +13,7 @@ import countryRoutes from "./routes/country.routes";
 import userRoutes from "./routes/user.routes";
 import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
-
+import movieRoutes from "./routes/movie.routes";
 
 const app = express();
 
@@ -24,6 +24,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/countries", countryRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/cities", citiesRoutes);
+app.use("/api/v1/movies", movieRoutes);
 // Swagger
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
