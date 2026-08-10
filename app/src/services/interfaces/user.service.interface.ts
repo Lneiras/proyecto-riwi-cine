@@ -16,7 +16,7 @@ export interface IUserService {
 
     Auth(email: string, password: string): Promise<User | null>;
 
-    findUserByLocation(location: string): Promise<User | null>;
+    findUserByLocation(location: string): Promise<User[] | null>;
 
     health(): Promise<string>;
 

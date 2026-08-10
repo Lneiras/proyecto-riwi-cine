@@ -92,7 +92,7 @@ class UserService implements IUserService {
         return await UserRepository.auth(email, password);
     }
 
-    async findUserByLocation(location: string): Promise<User | null> {
+    async findUserByLocation(location: string): Promise<User[] | null> {
         return await UserRepository.findUserByLocation(location)
     }
 
