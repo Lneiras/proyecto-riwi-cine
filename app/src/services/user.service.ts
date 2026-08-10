@@ -2,7 +2,7 @@
 
 import User from "../models/user.model";
 import { CreateUserDto } from "../dto/create-user.dto";
-import repository from "../repositories/user.repository";
+import UserRepository from "../repositories/user.repository";
 import { IUserService } from "./interfaces/user.service.interface";
 
 
@@ -54,7 +54,7 @@ class UserService implements IUserService {
          *  - Enviar un correo de bienvenida.
          */
 
-        return await repository.create(dto);
+        return await UserRepository.create(dto);
 
     }
 
@@ -85,11 +85,15 @@ class UserService implements IUserService {
      * // ]
      */
     async findAll(): Promise<User[]> {
-        return await repository.findAll();
+        return await UserRepository.findAll();
     }
 
     async Auth(email: string, password: string): Promise<User | null> {
-        return await repository.auth(email, password);
+        return await UserRepository.auth(email, password);
+    }
+
+    async findUserByLocation(location: string): Promise<User[] | null> {
+        return await UserRepository.findUserByLocation(location)
     }
 
     async health(): Promise<string> {
@@ -100,7 +104,7 @@ class UserService implements IUserService {
     }
 
     async findById(id: number): Promise<User | null> {
-        return await repository.findById(id);
+        return await UserRepository.findById(id);
     }   
 
  

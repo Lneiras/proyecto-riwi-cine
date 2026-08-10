@@ -1,7 +1,9 @@
 // app/src/repositories/user.repository.ts
 import { error } from "console";
 import User, { UserCreationAttributes } from "../models/user.model";
+import cities from "../models/cities.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
+import City from "../models/cities.model";
 
 
 /**
@@ -38,6 +40,12 @@ class UserRepository implements IUserRepository {
         return await User.findOne({ where: { email, password } });
 
 
+    }
+
+    async findUserByLocation(location: string): Promise<User[] | null> {
+        console.log("repository location:", typeof location, location)
+        const users = await User.findAll({ include: [{ model: City, where: { name: location } }] });
+        return users.length > 0 ? users : null;
     }
 
     async findById(id: number): Promise<User | null> {
