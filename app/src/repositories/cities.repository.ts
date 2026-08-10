@@ -26,6 +26,12 @@ class CityRepository {
         if (!city) throw new Error("City not found");
         return await city.destroy();
     }
+
+    async findByDepartmentId(departmentId: number): Promise<City[]> {
+        return await City.findAll({ where: { departmentId } });
+    }
+
+
 }
 
 export default new CityRepository();

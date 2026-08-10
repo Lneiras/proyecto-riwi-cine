@@ -16,7 +16,6 @@ class DepartmentService {
 
     async findDepartmentsByCountryId(countryId: number): Promise<Department[]> {
     return await DepartmentRepository.findByCountryId(countryId);
-
     }
 
 }
