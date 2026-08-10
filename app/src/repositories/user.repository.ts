@@ -3,6 +3,7 @@ import { error } from "console";
 import User, { UserCreationAttributes } from "../models/user.model";
 import cities from "../models/cities.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
+import City from "../models/cities.model";
 
 
 /**
@@ -42,7 +43,7 @@ class UserRepository implements IUserRepository {
     }
 
     async findUserByLocation(location: string): Promise<User[] | null> {
-        const users = await User.findAll({ include: [{ model: cities, where: { name: location } }] });
+        const users = await User.findAll({ include: [{ model: City, where: { name: location } }] });
         return users.length > 0 ? users : null;
     }
 

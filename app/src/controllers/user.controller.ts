@@ -211,7 +211,7 @@ export const Auth = async (req: Request, res: Response): Promise<Response> => {
 export const getUserByLocation = async(req: Request, res: Response)=>{
     try {
 
-        const { location } = req.params
+        const { location } = req.query as { location: string };
 
         const userByLocation = await userService.findUserByLocation(location);
 

@@ -306,7 +306,7 @@ router.get("/:id", getUsersbyId);
  *               - id: 1
  *                 name: "John Doe"
  *                 email: "john.doe@example.com"
- *                password: "hashed_password"
+ *                 password: "hashed_password"
  *               - id: 2
  *                 name: "Jane Doe"
  *                 email: "jane.doe@example.com"

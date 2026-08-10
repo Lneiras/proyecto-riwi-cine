@@ -24,7 +24,7 @@ export interface UserAttributes {
   name: string;
   email: string;
   password: string;
-  location: string;
+  location: number;
 }
 
 /**
@@ -52,7 +52,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   
   public password!: string;
 
-  public location!: string;
+  public location!: number;
 }
 
 /**
@@ -83,9 +83,9 @@ User.init(
       allowNull: false,
     },
     location: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.INTEGER,
       allowNull: false,
-      references:{
+      references: {
         model: "cities",
         key: "id"
       }
