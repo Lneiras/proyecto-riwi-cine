@@ -29,7 +29,7 @@ City.init(
             allowNull: false,
             references: {
                 model: "departments",
-                key: "id"
+                key: "id",
             }
         }
     },

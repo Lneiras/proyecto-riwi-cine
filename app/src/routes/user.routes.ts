@@ -190,7 +190,56 @@ router.get("/", getUsers);
 
 router.post("/auth", Auth)
 
+/**
+ * GET /location
+ * -------------
+ * Obtiene usuarios filtrados por ubicación.
+ * Response:
+ *  - 200 OK: Devuelve un array de usuarios en formato JSON.
+ *  - 400 Bad Request: En caso de parámetros inválidos.
+ *  - 500 Internal Server Error: En caso de error en la consulta.
+ *
+ * @swagger
+ * /api/users/location:
+ *   get:
+ *     summary: Obtener usuarios por ubicación
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: location
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Ubicación para filtrar los usuarios
+ *     responses:
+ *       200:
+ *         description: Usuarios obtenidos exitosamente
+ *         content:
+ *           application/json:
+ *             example:
+ *               - id: 1
+ *                 name: "John Doe"
+ *                 email: "john.doe@example.com"
+ *                 password: "hashed_password"
+ *               - id: 2
+ *                 name: "Jane Doe"
+ *                 email: "jane.doe@example.com"
+ *                 password: "hashed_password"
+ *       400:
+ *         description: Parámetros inválidos
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Ubicación no válida"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Error al obtener los usuarios por ubicación"
+ */
 
+router.get("/location", getUserByLocation)
 
 
 
@@ -276,56 +325,7 @@ router.post("/v1/health", health)
 router.get("/:id", getUsersbyId);
 
 
-/**
- * GET /location
- * -------------
- * Obtiene usuarios filtrados por ubicación.
- * Response:
- *  - 200 OK: Devuelve un array de usuarios en formato JSON.
- *  - 400 Bad Request: En caso de parámetros inválidos.
- *  - 500 Internal Server Error: En caso de error en la consulta.
- *
- * @swagger
- * /api/users/location:
- *   get:
- *     summary: Obtener usuarios por ubicación
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: location
- *         required: true
- *         schema:
- *           type: string
- *         description: Ubicación para filtrar los usuarios
- *     responses:
- *       200:
- *         description: Usuarios obtenidos exitosamente
- *         content:
- *           application/json:
- *             example:
- *               - id: 1
- *                 name: "John Doe"
- *                 email: "john.doe@example.com"
- *                 password: "hashed_password"
- *               - id: 2
- *                 name: "Jane Doe"
- *                 email: "jane.doe@example.com"
- *                 password: "hashed_password"
- *       400:
- *         description: Parámetros inválidos
- *         content:
- *           application/json:
- *             example:
- *               error: "Ubicación no válida"
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             example:
- *               error: "Error al obtener los usuarios por ubicación"
- */
 
-router.get("/location", getUserByLocation)
 
 
 

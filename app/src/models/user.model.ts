@@ -15,6 +15,7 @@
 
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
+import City from "./cities.model"
 
 /**
  * Atributos principales de la entidad `User`.
@@ -24,7 +25,7 @@ export interface UserAttributes {
   name: string;
   email: string;
   password: string;
-  location: number;
+  location?: number;
 }
 
 /**
@@ -98,5 +99,9 @@ User.init(
     timestamps: true,      // Incluye createdAt y updatedAt
   }
 );
+
+User.belongsTo(City, { foreignKey: 'location'});
+City.hasMany(User, {foreignKey: 'location'})
+
 
 export default User;
