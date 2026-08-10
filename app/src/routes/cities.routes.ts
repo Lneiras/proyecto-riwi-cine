@@ -67,8 +67,9 @@ router.get('/', getAllCities);
 router.get('/:id', getCityById);
 
 
-/** * @swagger
- * /api/cities/department/{departmentId}:
+/**
+ * @swagger
+ * /api/cities/departments/{departmentId}:
  *   get:
  *     summary: Obtener todas las ciudades por ID de departamento
  *     tags: [Cities]
@@ -78,7 +79,7 @@ router.get('/:id', getCityById);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del departamento para filtrar las ciudades
+ *     description: ID del departamento para filtrar las ciudades
  *     responses:
  *       200:
  *         description: Lista de ciudades obtenida exitosamente
@@ -88,20 +89,20 @@ router.get('/:id', getCityById);
  *               - id: 1
  *                 name: "Bogotá"
  *               - id: 2
- *                name: "Medellín"
- *      404:
- *          description: No se encontraron ciudades para el departamento especificado
- *          content:
- *            application/json:
- *              example:
- *                error: "No cities found for the specified department"
- *      500:
- *          description: Error interno del servidor
- *          content:
- *            application/json:
- *              example:
- *                error: "Error al obtener las ciudades"
- * */
+ *                 name: "Medellín"
+ *       404:
+ *         description: No se encontraron ciudades para el departamento especificado
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "No cities found for the specified department"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Error al obtener las ciudades"
+ */
 
 router.get('/:departmentId', findCitiesByDepartmentId);
 
