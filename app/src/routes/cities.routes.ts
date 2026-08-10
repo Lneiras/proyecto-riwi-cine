@@ -104,6 +104,6 @@ router.get('/:id', getCityById);
  *               error: "Error al obtener las ciudades"
  */
 
-router.get('/:departmentId', findCitiesByDepartmentId);
+router.get('/departments/:departmentId', findCitiesByDepartmentId);
 
 export default router;
