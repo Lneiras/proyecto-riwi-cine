@@ -65,10 +65,26 @@ class MovieRepository {
     return showtimes;
 }
 
-    // async findSimilarMovies(genreId:number, excludeMovieId:number): Promise<Movie[]>{
+    async findSimilarMovies(genreId:number, excludeMovieId:number): Promise<Movie[]>{
+        const movies = await Movie.findAll({
+            where:{
+                genreId,
+                id:{[Op.ne]: excludeMovieId},
+            },
+            limit: 5,
+        })
 
-    // }
+        const genre = await MovieGenre.findByPk(genreId);
 
+        for(const movie of movies){
+            (movie as any).dataValues.genre = genre;
+        }
+
+        return movies;
+
+    };
+
+    
     
     
 }
