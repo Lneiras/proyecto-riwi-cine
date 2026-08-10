@@ -3,25 +3,34 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    // Debe coincidir exactamente con el nombre de tu tabla en la base de datos
-    await queryInterface.bulkInsert('usuarios', [
+    // Corregido: la tabla real (ver src/models/user.model.ts) es `users`
+    // en inglés, con columnas `name`/`email`/`password`, no `usuarios`
+    // con `nombre`/`creado_en`/`actualizado_en`.
+    //
+    // `password` es NOT NULL en el modelo real, así que se agrega un
+    // valor de demo. NO es un hash real: cuando exista el flujo de
+    // registro (HU-006) con bcrypt, estos dos usuarios de prueba deben
+    // reemplazarse o su password debe re-hashearse antes de usarlos
+    // para login.
+    await queryInterface.bulkInsert('users', [
       {
-        nombre: 'Juan Pérez',
+        name: 'Juan Pérez',
         email: 'juan@correo.com',
-        creado_en: new Date(),
-        actualizado_en: new Date()
+        password: 'demo-password-not-hashed',
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
       {
-        nombre: 'María López',
+        name: 'María López',
         email: 'maria@correo.com',
-        creado_en: new Date(),
-        actualizado_en: new Date()
+        password: 'demo-password-not-hashed',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    // Esto borra los datos si decides revertir el seeder
-    await queryInterface.bulkDelete('usuarios', null, {});
+    await queryInterface.bulkDelete('users', null, {});
   }
 };
