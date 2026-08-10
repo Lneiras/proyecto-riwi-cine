@@ -37,6 +37,57 @@ import Movie from "./movie.model";
 import Showtime from "./showtime.model";
 import PremiereNotification from "./premiere-notification.model";
 
+
+/**
+ * Asociaciones entre modelos
+ * ---------------------------
+ * Se definen aquí, en un solo lugar centralizado, DESPUÉS de que todos
+ * los modelos ya fueron inicializados con Model.init() (que ocurre al
+ * importarlos arriba). Habilitan `include` en las queries (joins) para
+ * HU-003 (cartelera con género/formato/idioma), HU-004 (detalle con
+ * funciones) y HU-009 (selección de función con datos de sala/cine).
+ */
+
+// Geografía: país → departamento → ciudad → cine → sala
+Country.hasMany(Department, { foreignKey: "countryId" });
+Department.belongsTo(Country, { foreignKey: "countryId" });
+
+Department.hasMany(City, { foreignKey: "departmentId" });
+City.belongsTo(Department, { foreignKey: "departmentId" });
+
+City.hasMany(Cinema, { foreignKey: "cityId" });
+Cinema.belongsTo(City, { foreignKey: "cityId" });
+
+Cinema.hasMany(Room, { foreignKey: "cinemaId" });
+Room.belongsTo(Cinema, { foreignKey: "cinemaId" });
+
+// Catálogo de películas
+Movie.belongsTo(MovieGenre, { foreignKey: "genreId" });
+MovieGenre.hasMany(Movie, { foreignKey: "genreId" });
+
+Movie.belongsTo(MovieStatus, { foreignKey: "statusId" });
+MovieStatus.hasMany(Movie, { foreignKey: "statusId" });
+
+// Funciones (Showtime): el corazón de HU-003
+Movie.hasMany(Showtime, { foreignKey: "movieId" });
+Showtime.belongsTo(Movie, { foreignKey: "movieId" });
+
+Room.hasMany(Showtime, { foreignKey: "roomId" });
+Showtime.belongsTo(Room, { foreignKey: "roomId" });
+
+Format.hasMany(Showtime, { foreignKey: "formatId" });
+Showtime.belongsTo(Format, { foreignKey: "formatId" });
+
+Language.hasMany(Showtime, { foreignKey: "languageId" });
+Showtime.belongsTo(Language, { foreignKey: "languageId" });
+
+// Notificaciones de estreno (HU-005)
+User.hasMany(PremiereNotification, { foreignKey: "userId" });
+PremiereNotification.belongsTo(User, { foreignKey: "userId" });
+
+Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
+PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
+
 export {
   Country,
   Department,
