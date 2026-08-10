@@ -42,4 +42,6 @@ export interface CreateUserDto {
 
     password: string;
 
+    location: string;
+
 }

@@ -24,6 +24,7 @@ export interface UserAttributes {
   name: string;
   email: string;
   password: string;
+  location: string;
 }
 
 /**
@@ -50,6 +51,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public email!: string;
   
   public password!: string;
+
+  public location!: string;
 }
 
 /**
@@ -79,6 +82,14 @@ User.init(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    location: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      references:{
+        model: "cities",
+        key: "id"
+      }
+    }
   },
   {
     sequelize,

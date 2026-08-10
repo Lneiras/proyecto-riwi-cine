@@ -208,6 +208,24 @@ export const Auth = async (req: Request, res: Response): Promise<Response> => {
 
 };
 
+export const getUserByLocation = async(req: Request, res: Response)=>{
+    try {
+
+        const { location } = req.params
+
+        const userByLocation = await userService.findUserByLocation(location);
+
+        if (!userByLocation) {
+            return res.status(404).json({error: "Location not found"})
+        }
+
+        return res.status(200).json(userByLocation);
+
+    } catch (error: any) {
+        return res.status(500).json({error: error.message})
+    }
+}
+
 
 export const health = async (_req: Request, res: Response): Promise<Response> => {
 

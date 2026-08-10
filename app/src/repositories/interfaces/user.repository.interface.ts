@@ -25,6 +25,8 @@ export interface IUserRepository {
     /*optener usuario por su id:*/
     findById(id: number): Promise<User | null>;
 
+    findUserByLocation(location: string): Promise<User | null>
+
     /**
      * Autentica un usuario por correo electrónico y contraseña.
      */

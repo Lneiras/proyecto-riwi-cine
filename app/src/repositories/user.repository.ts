@@ -40,6 +40,10 @@ class UserRepository implements IUserRepository {
 
     }
 
+    async findUserByLocation(location: string): Promise<User | null> {
+        return await User.findOne({where: {location: location}})
+    }
+
     async findById(id: number): Promise<User | null> {
 
         return await User.findByPk(id);
