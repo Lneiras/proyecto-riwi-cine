@@ -48,3 +48,29 @@ export const getDepartmentById = async(req: Request, res: Response): Promise<Res
         });
     } 
 }
+
+export const getDepartmentsByCountryId = async (req: Request, res: Response): Promise<Response> => {
+
+    try {
+
+        const { countryId } = req.params;
+
+        const departments = await DepartmentService.findDepartmentsByCountryId(parseInt(countryId));
+
+        if (!departments || departments.length === 0) {
+            return res.status(404).json({ error: "No se encontraron departamentos para el país especificado" });
+        }
+
+        return res.status(200).json(departments);
+
+     
+
+    } catch (error: any) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+}

@@ -27,6 +27,10 @@ class DepartmentRepository implements IDepartmentRepository {
         if (!department) throw new Error("Department not found")
         await department.destroy()
     }
+
+    async findByCountryId(countryId: number): Promise<Department[]> {
+        return await Department.findAll({ where: { countryId } });
+    }
 }
 
 export default new DepartmentRepository()
