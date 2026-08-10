@@ -14,8 +14,22 @@ import userRoutes from "./routes/user.routes";
 import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
 
+import cors from "cors";
+import { corsOptions } from "./config/cors";
+import helmet from "helmet";
+import morgan from "morgan";
+
 
 const app = express();
+
+// configuracion de CORS
+app.use(cors(corsOptions));
+
+// configuracion de Helmet
+app.use(helmet());
+
+// configuracion de Morgan para logging de peticiones HTTP
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 app.use(express.json());
 

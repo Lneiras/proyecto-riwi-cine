@@ -31,7 +31,7 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "API Example",
+      title: "Multicine API",
       version: "1.0.0",
       description: "Documentación generada automáticamente con Swagger para la API de ejemplo.",
     },
