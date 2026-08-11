@@ -13,8 +13,10 @@
  */
 
 import { Router } from "express";
-import { createUser, getUsers, Auth, health, getUserByLocation } from "../controllers/user.controller";
+import { createUser, getUsers, Auth, health, changeUserLocation } from "../controllers/user.controller";
 import { getUsersbyId } from "../controllers/user.controller";
+
+
 
 const router = Router();
 
@@ -191,55 +193,63 @@ router.get("/", getUsers);
 router.post("/auth", Auth)
 
 /**
- * GET /location
- * -------------
- * Obtiene usuarios filtrados por ubicación.
- * Response:
- *  - 200 OK: Devuelve un array de usuarios en formato JSON.
- *  - 400 Bad Request: En caso de parámetros inválidos.
- *  - 500 Internal Server Error: En caso de error en la consulta.
- *
  * @swagger
  * /api/users/location:
- *   get:
- *     summary: Obtener usuarios por ubicación
+ *   patch:
+ *     summary: Cambia la ubicación (ciudad) de un usuario autenticado
  *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: location
- *         required: true
- *         schema:
- *           type: string
- *         description: Ubicación para filtrar los usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - location
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: juan@example.com
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *               location:
+ *                 type: string
+ *                 description: Nombre de la ciudad
+ *                 example: Barranquilla
  *     responses:
  *       200:
- *         description: Usuarios obtenidos exitosamente
+ *         description: Ubicación actualizada exitosamente
  *         content:
  *           application/json:
- *             example:
- *               - id: 1
- *                 name: "John Doe"
- *                 email: "john.doe@example.com"
- *                 password: "hashed_password"
- *               - id: 2
- *                 name: "Jane Doe"
- *                 email: "jane.doe@example.com"
- *                 password: "hashed_password"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: John Doe
+ *                 email:
+ *                   type: string
+ *                   example: john.doe@example.com
+ *                 location:
+ *                   type: integer
+ *                   example: 5
  *       400:
- *         description: Parámetros inválidos
- *         content:
- *           application/json:
- *             example:
- *               error: "Ubicación no válida"
+ *         description: Faltan campos requeridos (email, password o location)
+ *       401:
+ *         description: Credenciales inválidas o usuario no autenticado
+ *       404:
+ *         description: Ciudad no encontrada
  *       500:
  *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             example:
- *               error: "Error al obtener los usuarios por ubicación"
  */
 
-router.get("/location", getUserByLocation)
+router.patch("/location", changeUserLocation)
 
 
 

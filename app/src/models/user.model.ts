@@ -101,7 +101,7 @@ User.init(
 );
 
 User.belongsTo(City, { foreignKey: 'location'});
-City.hasMany(User, {foreignKey: 'location'})
+City.hasMany(User, { foreignKey: 'location'})
 
 
 export default User;

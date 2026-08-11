@@ -3,7 +3,7 @@ import { error } from "console";
 import User, { UserCreationAttributes } from "../models/user.model";
 import cities from "../models/cities.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
-import City from "../models/cities.model";
+import CityRepository from "./cities.repository";
 
 
 /**
@@ -42,9 +42,18 @@ class UserRepository implements IUserRepository {
 
     }
 
-    async findUserByLocation(location: string): Promise<User[] | null> {
-        const users = await User.findAll({ include: [{ model: City, where: { name: location } }] });
-        return users.length > 0 ? users : null;
+    async changeUserLocation(email: string, password: string, location: string): Promise<User | null> {
+        
+        const user = await this.auth(email, password);
+
+        if(!user) throw new Error("nobody is loged in")
+
+        const city = await CityRepository.findByName(location)
+        
+        if(!city) throw new Error("City not found")
+
+        return user.update({ location: city.id })
+       
     }
 
     async findById(id: number): Promise<User | null> {

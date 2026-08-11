@@ -208,18 +208,18 @@ export const Auth = async (req: Request, res: Response): Promise<Response> => {
 
 };
 
-export const getUserByLocation = async(req: Request, res: Response)=>{
+export const changeUserLocation = async(req: Request, res: Response)=>{
     try {
 
-        const { location } = req.query as { location: string };
+        const { email, password, location } = req.body as { email:string, password: string, location: string };
 
-        const usersByLocation = await userService.findUserByLocation(location);
-
-        if (!usersByLocation) {
-            return res.status(404).json({error: "Location not found"})
+        if(!email || !password || !location){
+            return res.status(400).json({error: "email, password y location son requeridos"});
         }
+        
+        const updatedUser = await userService.changeUserLocation(email, password, location);
 
-        return res.status(200).json(usersByLocation);
+        return res.status(200).json(updatedUser);
 
     } catch (error: any) {
         return res.status(500).json({error: error.message})

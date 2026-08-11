@@ -25,12 +25,12 @@ export interface IUserRepository {
     /*optener usuario por su id:*/
     findById(id: number): Promise<User | null>;
 
-    findUserByLocation(location: string): Promise<User[] | null>;
-
     /**
      * Autentica un usuario por correo electrónico y contraseña.
      */
     auth(email: string, password: string): Promise<User | null>;
+    
+    changeUserLocation(email: string, password: string, location: string): Promise<User | null>;
 
     update(id: number, data: Partial<UserCreationAttributes>): Promise<User | null>;
 
