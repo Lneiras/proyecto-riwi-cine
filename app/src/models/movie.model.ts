@@ -123,7 +123,15 @@ Movie.init(
     modelName: "Movie",
     tableName: "movies",
     timestamps: true,
+    indexes: [
+      { fields: ["genreId"] },   // filtro por género (Escenario 2)
+      { fields: ["statusId"] },  // WHERE MovieStatus.name = 'publicada', se filtra siempre
+      { fields: ["rating"] },    // filtro por clasificación
+    ],
   }
 );
+
+// se agregan los indices para optimizar las consultas que se realizan para la cartelera semanal 
+// y tambien para la busqueda de proximos estrenos y detalle de pelicula
 
 export default Movie;

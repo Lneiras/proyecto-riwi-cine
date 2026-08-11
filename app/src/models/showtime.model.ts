@@ -103,7 +103,17 @@ Showtime.init(
     modelName: "Showtime",
     tableName: "showtimes",
     timestamps: true,
+    indexes: [
+      { fields: ["movieId"] },
+      { fields: ["roomId"] },
+      { fields: ["formatId"] },
+      { fields: ["languageId"] },
+      { fields: ["dateTime"] },           // el filtro de rango de fechas se usa en LOS TRES endpoints
+      { fields: ["movieId", "dateTime"] }, // índice compuesto: acelera "funciones de esta película en este rango"
+    ],
   }
 );
+
+// se agregan los indices para optimizar las consultas que se realizan para la cartelera semanal
 
 export default Showtime;

@@ -1,10 +1,12 @@
 
-
 /**
- * Filtros combinables de cartelera 
+ * Filtros combinables de cartelera mas la paginación 
+ * Validación manual  — cada campo es opcional excepto
+ * cuando se indica lo contrario.
  */
 
 import { AppError } from "../utils/apiResponse";
+
 
 export interface MovieFilters {
     cityId?: number;
@@ -13,6 +15,15 @@ export interface MovieFilters {
     languageId?: number;
     rating?: string;
 }
+
+export interface PaginationParams {
+    page: number;
+    limit: number;
+}
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 50;
 
 /** Convierte un query param a entero positivo, o undefined si no vino. Lanza si vino pero es inválido. */
 function parseOptionalInt(value: unknown, fieldName: string): number | undefined {
@@ -34,7 +45,7 @@ export function parseMovieFilters(query: Record<string, unknown>): MovieFilters 
     };
 }
 
-/** Rango de fechas explícito para /movies/filter */
+/** Rango de fechas explícito para /movies/filter (opcional; si no viene, el service usa el default de 7 días). */
 export function parseDateRange(query: Record<string, unknown>): { dateFrom?: Date; dateTo?: Date } {
     const dateFrom = query.dateFrom ? new Date(query.dateFrom as string) : undefined;
     const dateTo = query.dateTo ? new Date(query.dateTo as string) : undefined;
@@ -50,4 +61,19 @@ export function parseDateRange(query: Record<string, unknown>): { dateFrom?: Dat
     }
 
     return { dateFrom, dateTo };
+}
+
+/** Paginación (Task 3): page/limit con tope máximo para evitar abuso. */
+export function parsePagination(query: Record<string, unknown>): PaginationParams {
+    const page = query.page ? Number(query.page) : DEFAULT_PAGE;
+    const limit = query.limit ? Number(query.limit) : DEFAULT_LIMIT;
+
+    if (!Number.isInteger(page) || page < 1) {
+        throw new AppError('El parámetro "page" debe ser un entero mayor o igual a 1.', 400, "INVALID_QUERY_PARAM");
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
+    throw new AppError(`El parámetro "limit" debe ser un entero entre 1 y ${MAX_LIMIT}.`, 400, "INVALID_QUERY_PARAM");
+    }
+
+    return { page, limit };
 }
