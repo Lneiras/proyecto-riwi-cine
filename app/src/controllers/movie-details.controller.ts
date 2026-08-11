@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import movieService from "../services/movie.service";
+import movieService from "../services/movie-details.service";
 
 export const getMovieById = async (req: Request, res: Response) =>{
     try {

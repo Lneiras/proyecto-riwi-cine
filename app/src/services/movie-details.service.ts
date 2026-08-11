@@ -1,4 +1,4 @@
-import repository from "../repositories/movie.repository";
+import repository from "../repositories/movie-details.repository";
 import Movie from "../models/movie.model";
 
 class MovieService{
