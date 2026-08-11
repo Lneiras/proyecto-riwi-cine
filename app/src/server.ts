@@ -13,7 +13,7 @@ import countryRoutes from "./routes/country.routes";
 import userRoutes from "./routes/user.routes";
 import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
-import movieRoutes from "./routes/movie.routes";
+import movieRoutes from "./routes/movie-details.routes";
 
 
 const app = express();

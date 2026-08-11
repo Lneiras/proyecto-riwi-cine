@@ -37,6 +37,17 @@ import Movie from "./movie.model";
 import Showtime from "./showtime.model";
 import PremiereNotification from "./premiere-notification.model";
 
+
+Movie.belongsTo(MovieGenre, { foreignKey: "genreId"});
+Movie.belongsTo(MovieStatus, { foreignKey: "statusId"});
+
+
+
+
+
+
+
+
 export {
   Country,
   Department,

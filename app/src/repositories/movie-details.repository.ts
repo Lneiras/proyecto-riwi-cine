@@ -13,18 +13,15 @@ import {Op} from "sequelize";
 
 class MovieRepository {
     async findMovieDetailById(id:number): Promise<Movie | null> {
-        const movie = await Movie.findByPk(id);
-        if(!movie){
-            return null;
+        return await Movie.findByPk(id, {
+            include: [{
+                model: MovieGenre
+            },
+            {
+                model: MovieStatus
+            }]
         }
-
-        const movieGenre = await MovieGenre.findByPk(movie.genreId);
-        const movieStatus = await MovieStatus.findByPk(movie.statusId);
-        
-        (movie as any).dataValues.genre = movieGenre;
-        (movie as any).dataValues.status = movieStatus;
-
-        return movie;
+        );
     }
 
     async findFutureShowtimesByMovieId(movieId: number, cityId: number): Promise<Showtime[]> {
