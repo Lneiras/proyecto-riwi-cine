@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {getMovieById} from "../controllers/movie-details.controller";
+import {getMovieById, getFutureShowtimes} from "../controllers/movie-details.controller";
 
 const router = Router();
 
@@ -66,5 +66,80 @@ const router = Router();
  */
 
 router.get("/:id", getMovieById);
+
+
+/**
+ * GET /:id/functions
+ * ----
+ * Obtiene las funciones (showtimes) futuras y disponibles de una película,
+ * filtradas por la ciudad seleccionada.
+ * 
+ * Request Parameters:
+ *  - `id`: number (obligatorio) - ID de la película.
+ *  - `cityId`: number (obligatorio, query param) - ID de la ciudad seleccionada por el usuario.
+ * Response:
+ *  - 200 OK: Retorna un array de funciones en formato JSON.
+ *  - 400 Bad Request: Si no se envía `cityId`.
+ *  - 500 Internal Server Error: En caso de error en la consulta.
+ * 
+ * @swagger
+ * /api/movies/{id}/functions:
+ *   get:
+ *     summary: Obtener las funciones disponibles de una película por ciudad
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la película
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la ciudad seleccionada, para filtrar las funciones
+ *     responses:
+ *       200:
+ *         description: Funciones obtenidas exitosamente (puede ser un array vacío si no hay funciones disponibles en esa ciudad)
+ *         content:
+ *           application/json:
+ *             example:
+ *               - id: 10
+ *                 movieId: 1
+ *                 roomId: 2
+ *                 formatId: 3
+ *                 languageId: 1
+ *                 dateTime: "2026-08-15T20:30:00.000Z"
+ *                 basePrice: 18000
+ *                 format:
+ *                   id: 3
+ *                   name: "IMAX"
+ *                 language:
+ *                   id: 1
+ *                   name: "Subtitulada"
+ *                 room:
+ *                   id: 2
+ *                   name: "Sala 2"
+ *                   cinemaId: 1
+ *                 cinema:
+ *                   id: 1
+ *                   name: "Multicine Buenavista"
+ *                   cityId: 3
+ *       400:
+ *         description: Falta el parámetro cityId
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "cityId is required as a query param"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Error al obtener las funciones"
+ */
+router.get("/:id/functions", getFutureShowtimes);
 
 export default router;

@@ -1,5 +1,6 @@
 import {Request, Response} from "express";
 import movieService from "../services/movie-details.service";
+import { error } from "console";
 
 export const getMovieById = async (req: Request, res: Response) =>{
     try {
@@ -10,3 +11,17 @@ export const getMovieById = async (req: Request, res: Response) =>{
         res.status(404).json({error: error.message})
     }
 }
+
+export const getFutureShowtimes = async (req: Request, res: Response) =>{
+    try {
+        const {id} = req.params;
+        const {cityId} = req.query
+        if(!cityId){
+            return res.status(400).json({error: "cityId is required as a query param"})
+        }
+        const showtimes = await movieService.getFutureShowtimes(parseInt(id), parseInt(cityId as string));
+        res.status(200).json(showtimes);
+    } catch (error: any) {
+        res.status(500).json({error: error.message})
+    }
+} 
