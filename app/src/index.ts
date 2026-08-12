@@ -11,6 +11,11 @@
 import app from "./server";
 import sequelize from "./config/database";
 
+// Registra todos los modelos del dominio (ver comentario en el archivo)
+// para que `sequelize.sync()` cree sus tablas al arrancar, sin importar
+// si su ruta ya está montada en server.ts o no.
+import "./models";
+
 const PORT = process.env.APP_PORT || 3000;
 
 const start = async () => {

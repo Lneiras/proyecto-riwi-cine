@@ -10,6 +10,10 @@ class CountryService {
 
     }
 
+    async findCountryById(id: number): Promise<Country | null> {
+        return await Country.findByPk(id);
+    }
+
 }
 
 export default new CountryService();

@@ -1,5 +1,5 @@
 import City, {CityAttributes} from "../models/cities.model";
-import {Optional} from "sequelize";
+import {Optional , Op} from "sequelize";
 
 
 class CityRepository {
@@ -9,6 +9,10 @@ class CityRepository {
 
     async findById(id: number): Promise<City | null> {
         return await City.findByPk(id);
+    }
+
+    async findByName(name: string): Promise<City | null>{
+        return await City.findOne({where: {name: {[Op.iLike]: name}}})
     }
 
     async create(cityData: Optional<CityAttributes, 'id'>): Promise<City> {
@@ -26,6 +30,12 @@ class CityRepository {
         if (!city) throw new Error("City not found");
         return await city.destroy();
     }
+
+    async findByDepartmentId(departmentId: number): Promise<City[]> {
+        return await City.findAll({ where: { departmentId } });
+    }
+
+
 }
 
 export default new CityRepository();

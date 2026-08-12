@@ -1,13 +1,21 @@
+import DepartmentRepository from "../repositories/departament.repository";
 import Department from "../models/departament.model";
-import repository from "../repositories/department.repository";
 
 
 class DepartmentService {
 
-    async findDepartments(): Promise<Department[]> {
+    async getAllDepartments() {
 
-        return await repository.findDeparments();
+        return await DepartmentRepository.findAll();
 
+    }
+
+    async getDepartmentById(id: number){
+        return await DepartmentRepository.findById(id)
+    }
+
+    async findDepartmentsByCountryId(countryId: number): Promise<Department[]> {
+    return await DepartmentRepository.findByCountryId(countryId);
     }
 
 }

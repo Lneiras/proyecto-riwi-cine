@@ -1,0 +1,18 @@
+
+
+// con esto realizamos la configuracion de eslint para que funcione con typescript y 
+// prettier para que no nos marque errores de sintaxis y nos ayude a mantener un codigo 
+// limpio y ordenado
+
+{
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+    ],
+    "plugins": ["@typescript-eslint"],
+    "rules": {
+    "@typescript-eslint/no-unused-vars": "warn"
+    }
+}
