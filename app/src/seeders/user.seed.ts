@@ -12,8 +12,8 @@
 import User from "../models/user.model";
 
 export const userSeedData = [
-  { name: "Juan Pérez", email: "juan@correo.com", password: "demo-password-not-hashed" },
-  { name: "María López", email: "maria@correo.com", password: "demo-password-not-hashed" },
+  { name: "Juan Pérez", email: "juan@correo.com", password: "demo-password-not-hashed", location: 1 },
+  { name: "María López", email: "maria@correo.com", password: "demo-password-not-hashed", location: 2 },
 ];
 
 export async function seedUsers(): Promise<Map<string, number>> {
