@@ -70,29 +70,49 @@ export class MovieRepository {
             return { ids: pageRows.map((m) => m.id), total: totalRows.length };
         }
 
-    /** Detalle completo solo para los IDs ya elegidos. */
-        private static async findFullMoviesByIds(ids: number[]): Promise<Movie[]> {
-            if (ids.length === 0) return [];
+/**  detalle completo, mostrando SOLO las funciones que cumplen los mismos filtros del Paso 1. */
+    private static async findFullMoviesByIds(
+        ids: number[],
+        params: Pick<CarteleraQueryParams, "cityId" | "formatId" | "languageId" | "dateFrom" | "dateTo">
+        ): Promise<Movie[]> {
 
-            return Movie.findAll({
-                where: { id: ids },
-                include: [
-                    MovieGenre,
-                    MovieStatus,
+        if (ids.length === 0) return [];
+
+        const { cityId, formatId, languageId, dateFrom, dateTo } = params;
+
+        const showtimeWhere: WhereOptions = { dateTime: { [Op.between]: [dateFrom, dateTo] } };
+        if (formatId) showtimeWhere.formatId = formatId;
+        if (languageId) showtimeWhere.languageId = languageId;
+
+        return Movie.findAll({
+            where: { id: ids },
+            include: [
+                MovieGenre,
+                MovieStatus,
+                {
+                    model: Showtime,
+                    where: showtimeWhere,          // 👈 mismo filtro de fecha/formato/idioma que el Paso 1
+                    required: true,
+                    include: [
                     {
-                        model: Showtime,
-                        include: [{ model: Room, include: [Cinema] }, Format, Language],
-                        separate: true,
-                        order: [["dateTime", "ASC"]],
+                        model: Room,
+                        required: true,
+                        include: [{ model: Cinema, required: true, where: cityId ? { cityId } : undefined }], // 👈 mismo filtro de ciudad
                     },
+                    Format,
+                    Language,
                 ],
-                order: [["title", "ASC"]],
-                });
-        }
+                separate: true,
+                order: [["dateTime", "ASC"]],
+                },
+            ],
+            order: [["title", "ASC"]],
+        });
+    }
 
         static async findCartelera(params: CarteleraQueryParams): Promise<{ movies: Movie[]; total: number }> {
             const { ids, total } = await this.findMatchingMovieIds(params);
-            const movies = await this.findFullMoviesByIds(ids);
+            const movies = await this.findFullMoviesByIds(ids, params);
             return { movies, total };
         }
     }
