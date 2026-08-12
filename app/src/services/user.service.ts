@@ -103,7 +103,7 @@ class UserService implements IUserService {
         return await repository.findById(id);
     }   
 
- 
+
 }
 
 export default new UserService();

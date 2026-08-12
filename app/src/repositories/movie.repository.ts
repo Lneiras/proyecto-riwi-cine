@@ -48,13 +48,12 @@ export class MovieRepository {
         },
     ];
 
-        const totalRows = await Movie.findAll({
-            attributes: ["id"],
-            where: movieWhere,
-            include: sharedIncludes,
-            group: ["Movie.id"],
-            subQuery: false,
-        });
+            const totalRows = await Movie.count({
+                where: movieWhere,
+                include: sharedIncludes,
+                distinct: true,
+                col: "id",
+            });
 
             const pageRows = await Movie.findAll({
                 attributes: ["id", "title"],
@@ -67,7 +66,7 @@ export class MovieRepository {
                 subQuery: false,
             });
 
-            return { ids: pageRows.map((m) => m.id), total: totalRows.length };
+            return { ids: pageRows.map((m) => m.id), total: totalRows };
         }
 
 /**  detalle completo, mostrando SOLO las funciones que cumplen los mismos filtros del Paso 1. */

@@ -45,17 +45,36 @@ export function parseMovieFilters(query: Record<string, unknown>): MovieFilters 
     };
 }
 
-/** Rango de fechas explícito para /movies/filter (opcional; si no viene, el service usa el default de 7 días). */
-export function parseDateRange(query: Record<string, unknown>): { dateFrom?: Date; dateTo?: Date } {
-    const dateFrom = query.dateFrom ? new Date(query.dateFrom as string) : undefined;
-    const dateTo = query.dateTo ? new Date(query.dateTo as string) : undefined;
+/** parsea la fecha para que corra en hora local y no en UTC lo que podria incurrir en errores al momento de filtrar*/
+function parseISODateOnly(value: string, fieldName: "dateFrom" | "dateTo"): Date {
+    const trimmed = value.trim();
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
 
-    if (query.dateFrom && isNaN(dateFrom!.getTime())) {
-        throw new AppError('El parámetro "dateFrom" no es una fecha válida (usa formato ISO: YYYY-MM-DD).', 400, "INVALID_QUERY_PARAM");
+    if (!match) {
+        throw new AppError(`El parámetro "${fieldName}" no es una fecha válida (usa formato ISO: YYYY-MM-DD).`, 400, "INVALID_QUERY_PARAM");
     }
-    if (query.dateTo && isNaN(dateTo!.getTime())) {
-        throw new AppError('El parámetro "dateTo" no es una fecha válida (usa formato ISO: YYYY-MM-DD).', 400, "INVALID_QUERY_PARAM");
+
+    const year = Number(match[1]);
+    const month = Number(match[2]); // 1-12
+    const day = Number(match[3]); // 1-31
+
+    const date = new Date(year, month - 1, day); // esto genera la hora local evitando la UTC
+
+  // 
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        throw new AppError(`El parámetro "${fieldName}" no es una fecha válida (usa formato ISO: YYYY-MM-DD).`, 400, "INVALID_QUERY_PARAM");
     }
+
+    return date;
+}
+
+export function parseDateRange(query: Record<string, unknown>): { dateFrom?: Date; dateTo?: Date } {
+    const rawDateFrom = typeof query.dateFrom === "string" ? query.dateFrom : undefined;
+    const rawDateTo = typeof query.dateTo === "string" ? query.dateTo : undefined;
+
+    const dateFrom = rawDateFrom ? parseISODateOnly(rawDateFrom, "dateFrom") : undefined;
+    const dateTo = rawDateTo ? parseISODateOnly(rawDateTo, "dateTo") : undefined;
+
     if (dateFrom && dateTo && dateFrom > dateTo) {
         throw new AppError('"dateFrom" no puede ser posterior a "dateTo".', 400, "INVALID_DATE_RANGE");
     }
