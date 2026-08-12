@@ -5,6 +5,7 @@ import { CreateUserDto } from "../dto/create-user.dto";
 import repository from "../repositories/user.repository";
 import { IUserService } from "./interfaces/user.service.interface";
 
+
 /**
  * Servicio de Usuarios
  * --------------------
@@ -87,6 +88,22 @@ class UserService implements IUserService {
         return await repository.findAll();
     }
 
+    async Auth(email: string, password: string): Promise<User | null> {
+        return await repository.auth(email, password);
+    }
+
+    async health(): Promise<string> {
+        // Aquí podrías implementar lógica para verificar la salud del servicio,
+        // como comprobar la conexión a la base de datos, verificar dependencias externas, etc.
+        // Por simplicidad, retornaremos un mensaje estático.
+        return "UserService is healthy";
+    }
+
+    async findById(id: number): Promise<User | null> {
+        return await repository.findById(id);
+    }   
+
+ 
 }
 
 export default new UserService();

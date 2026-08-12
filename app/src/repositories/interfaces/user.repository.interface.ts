@@ -22,4 +22,9 @@ export interface IUserRepository {
      */
     findAll(): Promise<User[]>;
 
+    /**
+     * Autentica un usuario por correo electrónico y contraseña.
+     */
+    auth(email: string, password: string): Promise<User | null>;
+
 }
