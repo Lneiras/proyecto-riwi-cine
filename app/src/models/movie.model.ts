@@ -1,4 +1,4 @@
-// app/src/models/movie.model.ts
+
 
 /**
  * Modelo de Película

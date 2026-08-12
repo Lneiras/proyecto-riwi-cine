@@ -1,4 +1,3 @@
-// app/src/repositories/movie.repository.ts
 
 /**
  * Repository de Cartelera

@@ -1,5 +1,4 @@
 
-// app/src/services/movie.service.ts
 
 import { MovieRepository } from "../repositories/movie.repository";
 import { MovieFilters, PaginationParams } from "../dto/movie-filter.dto";
@@ -19,7 +18,7 @@ function endOfDay(date: Date): Date {
 }
 
 export class MovieService {
-  /** HU-003 Escenario 1: cartelera de los próximos 7 días. */
+  /** cartelera de los próximos 7 días */
     static async getWeeklyCartelera(filters: MovieFilters, pagination: PaginationParams) {
         const dateFrom = startOfDay(new Date());
         const dateTo = endOfDay(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000));

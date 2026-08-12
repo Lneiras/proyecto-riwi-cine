@@ -1,5 +1,4 @@
 
-// app/src/routes/movie.routes.ts
 
 import { Router } from "express";
 import { MovieController } from "../controllers/movie.controller";
@@ -30,11 +29,17 @@ const router = Router();
  *         name: rating
  *         schema: { type: string }
  *         example: "PG-13"
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10, maximum: 50 }
  *     responses:
  *       200:
- *         description: Lista de películas publicadas con funciones en los próximos 7 días (puede ser un arreglo vacío)
+ *         description: Lista paginada de películas publicadas con funciones en los próximos 7 días (puede ser un arreglo vacío)
  *       400:
- *         description: Parámetro de query inválido (ej. cityId no numérico)
+ *         description: Parámetro de query inválido (ej. cityId no numérico, limit fuera de rango)
  */
 router.get("/weekly", MovieController.getWeekly);
 
@@ -48,9 +53,15 @@ router.get("/weekly", MovieController.getWeekly);
  *       - in: query
  *         name: cityId
  *         schema: { type: integer }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10, maximum: 50 }
  *     responses:
  *       200:
- *         description: Lista de películas con funciones restantes hoy
+ *         description: Lista paginada de películas con funciones restantes hoy
  *       400:
  *         description: Parámetro de query inválido
  */
@@ -86,11 +97,17 @@ router.get("/today", MovieController.getToday);
  *         name: dateTo
  *         schema: { type: string, format: date }
  *         example: "2026-08-17"
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10, maximum: 50 }
  *     responses:
  *       200:
- *         description: Lista de películas que cumplen todos los filtros combinados (arreglo vacío si ninguna coincide — Escenario 3)
+ *         description: Lista paginada de películas que cumplen todos los filtros combinados (arreglo vacío si ninguna coincide — Escenario 3)
  *       400:
- *         description: Parámetro inválido o dateFrom posterior a dateTo
+ *         description: Parámetro inválido, limit fuera de rango, o dateFrom posterior a dateTo
  */
 router.get("/filter", MovieController.getFilter);
 

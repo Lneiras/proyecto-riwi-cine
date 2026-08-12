@@ -1,4 +1,3 @@
-// app/src/models/showtime.model.ts
 
 /**
  * Modelo de Función
