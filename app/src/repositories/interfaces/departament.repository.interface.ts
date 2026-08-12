@@ -1,4 +1,5 @@
 import Department, { DepartmentCreationAttributes } from "../../models/departament.model";
+import { Optional } from "sequelize"
 
 /**
  * Contrato del Repositorio de Departamentos
@@ -10,9 +11,16 @@ import Department, { DepartmentCreationAttributes } from "../../models/departame
 
 export interface IDepartmentRepository {
 
-    /**
-     * Obtiene todos los departamentos.
-     */
+    create(data: Optional<DepartmentCreationAttributes, "id">): Promise<Department>
+
     findAll(): Promise<Department[]>;
 
+    findById(id:number): Promise<Department | null>;
+
+    update(id: number, data: Partial<DepartmentCreationAttributes>): Promise<Department>;
+
+    delete(id: number): Promise<void>;
+
 }
+
+

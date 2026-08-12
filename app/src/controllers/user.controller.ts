@@ -208,6 +208,24 @@ export const Auth = async (req: Request, res: Response): Promise<Response> => {
 
 };
 
+export const changeUserLocation = async(req: Request, res: Response)=>{
+    try {
+
+        const { email, password, location } = req.body as { email:string, password: string, location: string };
+
+        if(!email || !password || !location){
+            return res.status(400).json({error: "email, password y location son requeridos"});
+        }
+        
+        const updatedUser = await userService.changeUserLocation(email, password, location);
+
+        return res.status(200).json(updatedUser);
+
+    } catch (error: any) {
+        return res.status(500).json({error: error.message})
+    }
+}
+
 
 export const health = async (_req: Request, res: Response): Promise<Response> => {
 

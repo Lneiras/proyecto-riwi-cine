@@ -13,8 +13,10 @@
  */
 
 import { Router } from "express";
-import { createUser, getUsers, Auth, health } from "../controllers/user.controller";
+import { createUser, getUsers, Auth, health, changeUserLocation } from "../controllers/user.controller";
 import { getUsersbyId } from "../controllers/user.controller";
+
+
 
 const router = Router();
 
@@ -190,7 +192,64 @@ router.get("/", getUsers);
 
 router.post("/auth", Auth)
 
+/**
+ * @swagger
+ * /api/users/location:
+ *   patch:
+ *     summary: Cambia la ubicación (ciudad) de un usuario autenticado
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - location
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: juan@example.com
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *               location:
+ *                 type: string
+ *                 description: Nombre de la ciudad
+ *                 example: Barranquilla
+ *     responses:
+ *       200:
+ *         description: Ubicación actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: John Doe
+ *                 email:
+ *                   type: string
+ *                   example: john.doe@example.com
+ *                 location:
+ *                   type: integer
+ *                   example: 5
+ *       400:
+ *         description: Faltan campos requeridos (email, password o location)
+ *       401:
+ *         description: Credenciales inválidas o usuario no autenticado
+ *       404:
+ *         description: Ciudad no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
 
+router.patch("/location", changeUserLocation)
 
 
 
@@ -274,6 +333,9 @@ router.post("/v1/health", health)
 
 
 router.get("/:id", getUsersbyId);
+
+
+
 
 
 

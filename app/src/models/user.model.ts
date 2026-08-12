@@ -15,6 +15,7 @@
 
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
+import City from "./cities.model"
 
 /**
  * Atributos principales de la entidad `User`.
@@ -24,6 +25,7 @@ export interface UserAttributes {
   name: string;
   email: string;
   password: string;
+  location: number;
 }
 
 /**
@@ -50,6 +52,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public email!: string;
   
   public password!: string;
+
+  public location!: number;
 }
 
 /**
@@ -79,6 +83,14 @@ User.init(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    location: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "cities",
+        key: "id"
+      }
+    }
   },
   {
     sequelize,
@@ -87,5 +99,9 @@ User.init(
     timestamps: true,      // Incluye createdAt y updatedAt
   }
 );
+
+User.belongsTo(City, { foreignKey: 'location'});
+City.hasMany(User, { foreignKey: 'location'})
+
 
 export default User;

@@ -41,3 +41,20 @@ export const getCityById = async (req: Request, res: Response): Promise<Response
     }
 }
 
+export const findCitiesByDepartmentId = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { departmentId } = req.params;
+        const cities = await CityService.findCitiesByDepartmentId(parseInt(departmentId));
+
+        if (!cities || cities.length === 0) {
+            return res.status(404).json({ error: "No cities found for this department" });
+        }
+
+        return res.status(200).json(cities);
+    } catch (error: any) {
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
