@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {getMovieById, getFutureShowtimes} from "../controllers/movie-details.controller";
+import {getMovieById, getFutureShowtimes, getMovieRecommendations} from "../controllers/movie-details.controller";
 
 const router = Router();
 
@@ -141,5 +141,68 @@ router.get("/:id", getMovieById);
  *               error: "Error al obtener las funciones"
  */
 router.get("/:id/functions", getFutureShowtimes);
+
+
+/**
+ * GET /:id/recommendations
+ * ----
+ * Obtiene películas recomendadas similares a la película indicada,
+ * basándose en que compartan el mismo género y estén "En Cartelera".
+ * 
+ * Request Parameters:
+ *  - `id`: number (obligatorio) - ID de la película base para la recomendación.
+ * Response:
+ *  - 200 OK: Retorna un array de películas recomendadas (vacío si no hay similares).
+ *  - 404 Not Found: Si la película base no existe.
+ *  - 500 Internal Server Error: En caso de error en la consulta.
+ * 
+ * @swagger
+ * /api/movies/{id}/recommendations:
+ *   get:
+ *     summary: Obtener películas recomendadas similares a una película
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la película base para calcular recomendaciones
+ *     responses:
+ *       200:
+ *         description: Recomendaciones obtenidas exitosamente (puede ser un array vacío si no hay películas similares)
+ *         content:
+ *           application/json:
+ *             examples:
+ *               conRecomendaciones:
+ *                 summary: Hay películas similares en cartelera
+ *                 value:
+ *                   - id: 5
+ *                     title: "Rápidos y Furiosos 12"
+ *                     durationMinutes: 130
+ *                     rating: "PG-13"
+ *                     genreId: 3
+ *                     statusId: 2
+ *                     posterUrl: "https://cdn.multicine.com/posters/rf12.jpg"
+ *                     genre:
+ *                       id: 3
+ *                       name: "Acción"
+ *               sinRecomendaciones:
+ *                 summary: No hay otras películas del mismo género en cartelera
+ *                 value: []
+ *       404:
+ *         description: Película base no encontrada
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Movie not found"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Error al obtener las recomendaciones"
+ */
+router.get("/:id/recommendations", getMovieRecommendations)
 
 export default router;

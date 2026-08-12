@@ -10,6 +10,7 @@ import {
 } from "../models";
 
 import { Op } from "sequelize";
+import { IMovieRepository } from "./interfaces/movie-details.repository.interface";
 
 class MovieRepository {
     async findMovieDetailById(id: number): Promise<Movie | null> {
@@ -55,23 +56,21 @@ class MovieRepository {
     }
 
     async findSimilarMovies(genreId: number, excludeMovieId: number): Promise<Movie[]> {
-        const movies = await Movie.findAll({
+        return await Movie.findAll({
             where: {
+                id: {[Op.ne]: excludeMovieId},
                 genreId,
-                id: { [Op.ne]: excludeMovieId },
+                statusId: 2,
             },
+            include:[
+                {
+                    model: MovieGenre,
+                }
+            ],
             limit: 5,
-        })
+        });
 
-        const genre = await MovieGenre.findByPk(genreId);
-
-        for (const movie of movies) {
-            (movie as any).dataValues.genre = genre;
-        }
-
-        return movies;
-
-    };
+    }
 
 
 
