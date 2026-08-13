@@ -7,43 +7,48 @@
  *
  * Un DTO (Data Transfer Object) define el contrato de datos entre el cliente
  * y la API, evitando exponer directamente el modelo de base de datos.
- * utilizan para:
- *  - Estandarizar los datos que se reciben o envían a través de la API.
- *  - Validar y tipar los objetos que entran a los controladores.
- *  - Evitar exponer directamente los modelos de la base de datos.
- */
-
-/**
- * Objeto de transferencia de datos para la creación de usuarios.
  *
- * @property {string} name - Nombre completo del usuario.
- * @property {string} email - Dirección de correo electrónico única del usuario.
- * @property {string} password - Contraseña del usuario.
- * @property {number} location - ubicacion del usuario
- * 
  * @example
  * const dto: CreateUserDto = {
  *   name: "David Mtz",
  *   email: "david@example.com",
  *   password: "password123"
- *   location: 1
  * };
  */
 
 export interface CreateUserDto {
+  /**
+   * Nombre completo del usuario.
+   */
+  name: string;
 
-    /**
-     * Nombre completo del usuario.
-     */
-    name: string;
+  /**
+   * Correo electrónico del usuario.
+   */
+  email: string;
 
-    /**
-     * Correo electrónico del usuario.
-     */
-    email: string;
+  /**
+   * Contraseña en texto plano (se hashea en el service antes de persistir).
+   */
+  password: string;
 
-    password: string;
+  /**
+   * FK hacia roles (opcional; por defecto se asigna el rol "Cliente").
+   */
+  roleId?: number;
 
-    location: number;
+  /**
+   * FK hacia memberships (opcional; por defecto 1).
+   */
+  membershipId?: number;
 
+  /**
+   * FK hacia cities (opcional).
+   */
+  cityId?: number | null;
+
+  /**
+   * FK hacia userGenres (opcional).
+   */
+  userGenreId?: number | null;
 }

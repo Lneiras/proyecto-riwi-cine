@@ -10,6 +10,8 @@
 
 import app from "./server";
 import sequelize from "./config/database";
+import { validateEnv } from "./config/env";
+import premiereNotificationJob from "./jobs/premiere-notification.job";
 
 // Registra todos los modelos del dominio (ver comentario en el archivo)
 // para que `sequelize.sync()` cree sus tablas al arrancar, sin importar
@@ -17,9 +19,11 @@ import sequelize from "./config/database";
 import "./models";
 
 const PORT = process.env.APP_PORT || 3000;
-
 const start = async () => {
   try {
+    // HU-001 Escenario 2: falla con mensaje claro si falta una variable obligatoria
+    validateEnv();
+
     await sequelize.authenticate();
     console.log("Conexión a la BD establecida...");
 
@@ -27,11 +31,14 @@ const start = async () => {
       alter: true
     }); // crea tablas si no existen
 
+    // HU-005 Task 2: job que notifica a suscriptores cuando la película ya está en cartelera
+    premiereNotificationJob.start();
+
     app.listen(PORT, () => {
       console.log(`Servidor escuchando en puerto ${PORT}`);
     });
   } catch (error) {
-    console.error("Error al conectar a la BD :", error);
+    console.error("Error al iniciar la aplicación:", error);
     process.exit(1);
   }
 };

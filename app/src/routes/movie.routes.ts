@@ -2,6 +2,7 @@
 
 import { Router } from "express";
 import { MovieController } from "../controllers/movie.controller";
+import { UpcomingMovieController } from "../controllers/upcoming-movie.controller";
 
 const router = Router();
 
@@ -110,5 +111,65 @@ router.get("/today", MovieController.getToday);
  *         description: Parámetro inválido, limit fuera de rango, o dateFrom posterior a dateTo
  */
 router.get("/filter", MovieController.getFilter);
+
+/**
+ * @swagger
+ * /api/v1/movies/upcoming:
+ *   get:
+ *     summary: Listado de próximos estrenos (HU-005 Escenario 1)
+ *     tags: [Movies]
+ *     responses:
+ *       200:
+ *         description: Películas en estado "proximo_estreno" ordenadas por fecha de estreno, con contador regresivo (daysUntilRelease) y tráiler (trailerUrl)
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: 6
+ *                   title: "Susurros del Bosque"
+ *                   durationMinutes: 110
+ *                   rating: "PG-13"
+ *                   synopsis: "Dos hermanas separadas por años de silencio..."
+ *                   releaseDate: "2026-09-04"
+ *                   posterUrl: "https://cdn.multicine.example.com/posters/susurros-del-bosque.jpg"
+ *                   bannerUrl: "https://cdn.multicine.example.com/banners/susurros-del-bosque.jpg"
+ *                   trailerUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ *                   daysUntilRelease: 23
+ *                   genre:
+ *                     id: 5
+ *                     name: "Drama"
+ *                   status:
+ *                     id: 3
+ *                     name: "proximo_estreno"
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get("/upcoming", UpcomingMovieController.getUpcoming);
+
+/**
+ * @swagger
+ * /api/v1/movies/upcoming/{id}:
+ *   get:
+ *     summary: Detalle de un próximo estreno (HU-005 Escenario 1)
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la película
+ *     responses:
+ *       200:
+ *         description: Detalle de la película en estado "proximo_estreno" con contador regresivo
+ *       404:
+ *         description: Película no encontrada o no es un próximo estreno
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: "Película no encontrada o no es un próximo estreno"
+ */
+router.get("/upcoming/:id", UpcomingMovieController.getUpcomingById);
 
 export default router;

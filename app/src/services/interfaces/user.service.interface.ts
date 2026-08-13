@@ -3,23 +3,26 @@
 import User from "../../models/user.model";
 import { CreateUserDto } from "../../dto/create-user.dto";
 
+export interface AuthResult {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
 
 /**
  * Contrato del Servicio de Usuarios.
  */
 
 export interface IUserService {
+  create(dto: CreateUserDto): Promise<User>;
 
-    create(dto: CreateUserDto): Promise<User>;
+  findAll(): Promise<User[]>;
 
-    findAll(): Promise<User[]>;
+  login(email: string, password: string): Promise<AuthResult | null>;
 
-    Auth(email: string, password: string): Promise<User | null>;
+  refresh(refreshToken: string): Promise<AuthResult>;
 
-    changeUserLocation(email: string, password: string, location: string): Promise<User | null>;
+  changeUserLocation(userId: number, location: string): Promise<User | null>;
 
-    health(): Promise<string>;
-
-    findById(id: number): Promise<User | null>;
-
+  findById(id: number): Promise<User | null>;
 }

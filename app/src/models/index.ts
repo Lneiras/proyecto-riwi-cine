@@ -27,6 +27,10 @@ import Country from "./country.model";
 import Department from "./departament.model";
 import City from "./cities.model";
 import User from "./user.model";
+import Role from "./role.model";
+import Membership from "./membership.model";
+import UserGenre from "./user-genre.model";
+import RefreshToken from "./refresh-token.model";
 import MovieGenre from "./movie-genre.model";
 import MovieStatus from "./movie-status.model";
 import Format from "./format.model";
@@ -68,6 +72,23 @@ MovieGenre.hasMany(Movie, { foreignKey: "genreId" });
 Movie.belongsTo(MovieStatus, { foreignKey: "statusId" });
 MovieStatus.hasMany(Movie, { foreignKey: "statusId" });
 
+// Catálogos del perfil de usuario (HU-001 / autenticación)
+Role.hasMany(User, { foreignKey: "roleId" });
+User.belongsTo(Role, { foreignKey: "roleId" });
+
+Membership.hasMany(User, { foreignKey: "membershipId" });
+User.belongsTo(Membership, { foreignKey: "membershipId" });
+
+UserGenre.hasMany(User, { foreignKey: "userGenreId" });
+User.belongsTo(UserGenre, { foreignKey: "userGenreId" });
+
+User.belongsTo(City, { foreignKey: "cityId" });
+City.hasMany(User, { foreignKey: "cityId" });
+
+// Refresh tokens (JWT)
+User.hasMany(RefreshToken, { foreignKey: "userId" });
+RefreshToken.belongsTo(User, { foreignKey: "userId" });
+
 // Funciones (Showtime): el corazón de HU-003
 Movie.hasMany(Showtime, { foreignKey: "movieId" });
 Showtime.belongsTo(Movie, { foreignKey: "movieId" });
@@ -93,6 +114,10 @@ export {
   Department,
   City,
   User,
+  Role,
+  Membership,
+  UserGenre,
+  RefreshToken,
   MovieGenre,
   MovieStatus,
   Format,

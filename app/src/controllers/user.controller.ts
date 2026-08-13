@@ -24,225 +24,132 @@ import { CreateUserDto } from "../dto/create-user.dto";
  *  - Acceder directamente a la base de datos.
  *  - Ejecutar consultas mediante Sequelize.
  *  - Realizar validaciones complejas del dominio.
- *
- * Arquitectura:
- *
- * Cliente HTTP
- *      │
- * UserController
- *      │
- * UserService
- *      │
- * UserRepository
- *      │
- * Sequelize
- *      │
- * PostgreSQL
  * ============================================================================
  */
 
 /**
- * Crea un nuevo usuario.
+ * Crea un nuevo usuario. La contraseña se hashea en el service.
  *
- * Recibe la información enviada por el cliente, construye el DTO de creación
- * y delega la operación al servicio correspondiente.
- *
- * @async
- *
- * @param {Request} req
- * Objeto de la petición HTTP.
- *
- * Espera recibir en el body:
  * @example
  * {
  *   "name": "David Mtz",
- *   "email": "david@example.com"
+ *   "email": "david@example.com",
+ *   "password": "password123"
  * }
  *
- * @param {Response} res
- * Objeto utilizado para construir la respuesta HTTP.
- *
- * @returns {Promise<Response>}
- * Promesa que resuelve una respuesta HTTP.
- *
- * Posibles respuestas:
- *
- * - **201 Created**
- *   Usuario creado correctamente.
- *
- * - **500 Internal Server Error**
- *   Error inesperado durante el procesamiento.
- *
- * @throws {Error}
- * Cualquier excepción generada por la capa de servicios será capturada
- * y retornada como una respuesta HTTP con código 500.
+ * Respuestas:
+ * - **201 Created** Usuario creado correctamente.
+ * - **500 Internal Server Error** Error inesperado durante el procesamiento.
  */
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
-
-    try {
-
-        // Construcción del DTO recibido desde el cliente.
-        const dto: CreateUserDto = req.body;
-
-        // Delega la lógica de negocio al servicio.
-        const user = await userService.create(dto);
-
-        // Retorna el recurso creado.
-        return res.status(201).json(user);
-
-    } catch (error: any) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
-    }
-
+  try {
+    const dto: CreateUserDto = req.body;
+    const user = await userService.create(dto);
+    return res.status(201).json(user);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
 /**
  * Obtiene el listado completo de usuarios.
- *
- * Delega la consulta a la capa de servicios, la cual será responsable de
- * aplicar cualquier regla de negocio antes de consultar el repositorio.
- *
- * @async
- *
- * @param {Request} _req
- * Objeto de la petición HTTP.
- *
- * En este endpoint no se utiliza, por ello se antepone "_" al nombre de la
- * variable para indicar explícitamente que el parámetro es requerido por
- * Express pero no será utilizado.
- *
- * @param {Response} res
- * Objeto utilizado para construir la respuesta HTTP.
- *
- * @returns {Promise<Response>}
- * Promesa que resuelve una respuesta HTTP.
- *
- * Posibles respuestas:
- *
- * - **200 OK**
- *   Lista de usuarios obtenida correctamente.
- *
- * - **500 Internal Server Error**
- *   Error inesperado durante la consulta.
- *
- * @example
- * [
- *   {
- *     "id": 1,
- *     "name": "David",
- *     "email": "david@example.com"
- *   }
- * ]
  */
 export const getUsers = async (_req: Request, res: Response): Promise<Response> => {
-
-    try {
-
-        // Solicita la información al servicio.
-        const users = await userService.findAll();
-
-        // Retorna la colección de usuarios.
-        return res.status(200).json(users);
-
-    } catch (error: any) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
-    }
-
+  try {
+    const users = await userService.findAll();
+    return res.status(200).json(users);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
 export const getUsersbyId = async (req: Request, res: Response): Promise<Response> => {
-
-    try {
-
-        const { id } = req.params;
-
-        const user = await userService.findById(parseInt(id));
-
-        if (!user) {
-            return res.status(404).json({ error: "Usuario no encontrado" });
-        }
-
-        return res.status(200).json(user);
-
-    } catch (error: any) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
+  try {
+    const { id } = req.params;
+    const user = await userService.findById(parseInt(id));
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
     }
-
+    return res.status(200).json(user);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
-
+/**
+ * Autenticación de usuario: valida credenciales y emite tokens JWT.
+ *
+ * @example
+ * {
+ *   "email": "david@example.com",
+ *   "password": "password123"
+ * }
+ *
+ * Respuestas:
+ * - **200 OK** Retorna { user, accessToken, refreshToken }.
+ * - **401 Unauthorized** Credenciales inválidas.
+ */
 export const Auth = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { email, password } = req.body;
+    const result = await userService.login(email, password);
 
-    try {
-
-        const { email, password } = req.body;
-
-        const user = await userService.Auth(email, password);
-
-        if (!user) {
-            return res.status(401).json({ error: "Credenciales inválidas" });
-        }
-
-        return res.status(200).json(user);
-
-    }
-    catch (error: any) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
+    if (!result) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
-export const changeUserLocation = async(req: Request, res: Response)=>{
-    try {
-
-        const { email, password, location } = req.body as { email:string, password: string, location: string };
-
-        if(!email || !password || !location){
-            return res.status(400).json({error: "email, password y location son requeridos"});
-        }
-        
-        const updatedUser = await userService.changeUserLocation(email, password, location);
-
-        return res.status(200).json(updatedUser);
-
-    } catch (error: any) {
-        return res.status(500).json({error: error.message})
-    }
-}
-
-
-export const health = async (_req: Request, res: Response): Promise<Response> => {
-
-    try {
-
-        const healthStatus = await userService.health();
-
-        return res.status(200).json({ status: healthStatus });
-
-    } catch (error: any) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
+/**
+ * Renovación de tokens mediante refresh token (rotación).
+ *
+ * @example
+ * {
+ *   "refreshToken": "..."
+ * }
+ *
+ * Respuestas:
+ * - **200 OK** Retorna { user, accessToken, refreshToken }.
+ * - **401 Unauthorized** Token de refresco inválido o expirado.
+ */
+export const refreshTokens = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: "refreshToken es requerido" });
     }
 
+    const result = await userService.refresh(refreshToken);
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(401).json({ error: error.message });
+  }
 };
 
+/**
+ * Cambia la ubicación (ciudad) del usuario autenticado (requiere Bearer token).
+ *
+ * @example
+ * {
+ *   "location": "Barranquilla"
+ * }
+ */
+export const changeUserLocation = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const userId = req.userId;
+    const { location } = req.body as { location?: string };
 
+    if (!userId || !location) {
+      return res.status(400).json({ error: "location es requerido y se requiere sesión activa" });
+    }
+
+    const updatedUser = await userService.changeUserLocation(userId, location);
+    return res.status(200).json(updatedUser);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};

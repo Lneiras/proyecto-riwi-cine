@@ -38,6 +38,9 @@ import { seedCinemas } from "./cinema.seed";
 import { seedRooms } from "./room.seed";
 import { seedMovies } from "./movie.seed";
 import { seedShowtimes } from "./showtime.seed";
+import { seedRoles } from "./role.seed";
+import { seedMemberships } from "./membership.seed";
+import { seedUserGenres } from "./user-genre.seed";
 import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
 
@@ -67,8 +70,13 @@ async function runSeeders(): Promise<void> {
   const movieIds = await seedMovies(genreIds, statusIds);
   await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
 
+  // Catálogos del perfil de usuario
+  const roleIds = await seedRoles();
+  const membershipIds = await seedMemberships();
+  await seedUserGenres();
+
   // Usuarios y suscripciones a estrenos
-  const userIds = await seedUsers();
+  const userIds = await seedUsers(roleIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
 
   console.log("\n✅ Seed completado con éxito.");

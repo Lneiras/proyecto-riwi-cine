@@ -110,13 +110,40 @@ app/src/
 
 Detailed documentation available in `/docs`:
 
-
+- **Swagger UI** (autogenerada desde JSDoc): disponible en `/api/docs` cuando la API está corriendo.
+- **Health check**: `GET /api/v1/health` verifica la conexión a la base de datos.
+- **pgAdmin** (solo desarrollo): `http://localhost:5050` — credenciales en `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`.
 
 <div align=right>
 
 [Back to top](#-table-of-contents)
 
 </div>
+
+---
+
+##  Environment Variables
+
+Copiar `.env.example` a `.env` y ajustar por ambiente.
+
+| Variable | Requerida | Descripción |
+| -------- | --------- | ----------- |
+| `POSTGRES_DB` | ✅ | Nombre de la base de datos |
+| `POSTGRES_USER` | ✅ | Usuario de conexión a PostgreSQL |
+| `POSTGRES_PASSWORD` | ✅ | Contraseña de PostgreSQL |
+| `POSTGRES_HOST` | ⚠️ | Host de la BD (por defecto `db` en Docker) |
+| `POSTGRES_PORT` | ⚠️ | Puerto de PostgreSQL (por defecto `5432`) |
+| `APP_PORT` | ⚠️ | Puerto de la API (por defecto `3000`) |
+| `NODE_ENV` | ✅ | `development`, `test` o `production` |
+| `JWT_SECRET` | ✅ | Secreto para firmar tokens JWT (**cambiar por ambiente**) |
+| `JWT_ACCESS_EXPIRES_IN` | ⚠️ | Expiración del access token (ej. `15m`) |
+| `JWT_REFRESH_EXPIRES_IN` | ⚠️ | Expiración del refresh token (ej. `7d`) |
+| `CORS_ORIGINS` | ⚠️ | Orígenes permitidos separados por coma |
+| `PGADMIN_DEFAULT_EMAIL` | ⚠️ | Email de acceso a pgAdmin (solo dev) |
+| `PGADMIN_DEFAULT_PASSWORD` | ⚠️ | Contraseña de pgAdmin (solo dev) |
+| `PGADMIN_PORT` | ⚠️ | Puerto de pgAdmin (solo dev, por defecto `5050`) |
+
+> Si falta una variable obligatoria, la API **falla al iniciar** con un mensaje claro indicando cuál falta.
 
 ---
 
