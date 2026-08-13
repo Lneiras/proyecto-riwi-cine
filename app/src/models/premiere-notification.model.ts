@@ -18,10 +18,11 @@ export interface PremiereNotificationAttributes {
   id: number;
   userId: number;
   movieId: number;
+  notifiedAt: Date | null;
 }
 
 export interface PremiereNotificationCreationAttributes
-  extends Optional<PremiereNotificationAttributes, "id"> {}
+  extends Optional<PremiereNotificationAttributes, "id" | "notifiedAt"> {}
 
 class PremiereNotification
   extends Model<PremiereNotificationAttributes, PremiereNotificationCreationAttributes>
@@ -35,6 +36,9 @@ class PremiereNotification
 
   /** FK hacia `movies.id`. */
   public movieId!: number;
+
+  /** Fecha en que se envió la notificación al usuario (null = pendiente). */
+  public notifiedAt!: Date | null;
 
   /** Fecha de suscripción (columna `createdAt` automática por `timestamps: true`). */
   public readonly createdAt!: Date;
@@ -62,6 +66,11 @@ PremiereNotification.init(
         model: "movies",
         key: "id",
       },
+    },
+    notifiedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

@@ -1,16 +1,40 @@
-FROM node:20-alpine
+# ============================================================
+# Dockerfile multi-stage para la API Node.js (HU-001, Task 1)
+# ------------------------------------------------------------
+#  - build:      compila TypeScript a dist/
+#  - production: imagen final liviana que ejecuta dist/index.js
+#
+# En desarrollo, docker-compose sobreescribe el comando con
+# ts-node-dev (hot-reload). Esta imagen queda lista para producción.
+# ============================================================
 
-# Definir directorio de trabajo
+FROM node:20-alpine AS build
+
 WORKDIR /usr/src/app
 
-# Copiar package.json y package-lock.json antes que el código
+# Instalar dependencias primero para aprovechar la caché de capas
 COPY package*.json ./
-
-# Instalar dependencias (solo en la imagen base)
 RUN npm install
 
-# Exponer el puerto
+# Compilar TypeScript
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+# ----------------- Producción -----------------
+FROM node:20-alpine AS production
+
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=production
+
+# Solo dependencias de producción
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Código compilado desde la etapa build
+COPY --from=build /usr/src/app/dist ./dist
+
 EXPOSE 3000
 
-# Comando por defecto
-CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]
+CMD ["node", "dist/index.js"]

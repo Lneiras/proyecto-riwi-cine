@@ -1,10 +1,10 @@
 // app/src/repositories/user.repository.ts
-import { error } from "console";
+
 import User, { UserCreationAttributes } from "../models/user.model";
-import cities from "../models/cities.model";
+import RefreshToken from "../models/refresh-token.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
 import CityRepository from "./cities.repository";
-
+import { Op } from "sequelize";
 
 /**
  * Repositorio de Usuarios
@@ -16,66 +16,67 @@ import CityRepository from "./cities.repository";
  */
 
 class UserRepository implements IUserRepository {
+  /**
+   * Crea un nuevo usuario.
+   */
+  async create(data: UserCreationAttributes): Promise<User> {
+    return await User.create(data);
+  }
 
-    /**
-     * Crea un nuevo usuario.
-     */
-    async create(data: UserCreationAttributes): Promise<User> {
+  /**
+   * Obtiene todos los usuarios.
+   */
+  async findAll(): Promise<User[]> {
+    return await User.findAll();
+  }
 
-        return await User.create(data);
+  async findById(id: number): Promise<User | null> {
+    return await User.findByPk(id);
+  }
 
-    }
+  async findByEmail(email: string): Promise<User | null> {
+    return await User.findOne({ where: { email } });
+  }
 
-    /**
-     * Obtiene todos los usuarios.
-     */
-    async findAll(): Promise<User[]> {
+  async changeUserLocation(userId: number, cityId: number): Promise<User | null> {
+    const user = await this.findById(userId);
+    if (!user) throw new Error("Usuario no encontrado");
+    return await user.update({ cityId });
+  }
 
-        return await User.findAll();
+  async saveRefreshToken(
+    userId: number,
+    token: string,
+    expiresAt: Date
+  ): Promise<RefreshToken> {
+    return await RefreshToken.create({ userId, token, expiresAt });
+  }
 
-    }
+  async findValidRefreshToken(token: string): Promise<RefreshToken | null> {
+    return await RefreshToken.findOne({
+      where: {
+        token,
+        revoked: false,
+        expiresAt: { [Op.gt]: new Date() },
+      },
+    });
+  }
 
-    async auth(email: string, password: string): Promise<User | null> {
+  async revokeRefreshToken(token: string): Promise<void> {
+    await RefreshToken.update({ revoked: true }, { where: { token } });
+  }
 
-        return await User.findOne({ where: { email, password } });
+  async update(id: number, data: Partial<UserCreationAttributes>): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) throw new Error("User not found");
+    return await user.update(data);
+  }
 
-
-    }
-
-    async changeUserLocation(email: string, password: string, location: string): Promise<User | null> {
-        
-        const user = await this.auth(email, password);
-
-        if(!user) throw new Error("nobody is loged in")
-
-        const city = await CityRepository.findByName(location)
-        
-        if(!city) throw new Error("City not found")
-
-        return user.update({ location: city.id })
-       
-    }
-
-    async findById(id: number): Promise<User | null> {
-
-        return await User.findByPk(id);
-
-    }
-
-    async update(id: number, data: Partial<UserCreationAttributes>): Promise<User>{
-        const user = await this.findById(id);
-        if (!user) throw new Error("User not found");
-        return await user.update(data);
-
-    }
-
-    async delete(id:number): Promise<void>{
-        const user = await this.findById(id);
-        if (!user) throw new Error("User not found");
-        return await user.destroy()
-    }
-
-
+  async delete(id: number): Promise<void> {
+    const user = await this.findById(id);
+    if (!user) throw new Error("User not found");
+    return await user.destroy();
+  }
 }
 
 export default new UserRepository();

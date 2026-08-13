@@ -15,6 +15,9 @@ import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
 import movieDetailsRoutes from "./routes/movie-details.routes";
 import movieRoutes from "./routes/movie.routes";
+import healthRoutes from "./routes/health.routes";
+import notificationRoutes from "./routes/notification.routes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 import cors from "cors";
 import { corsOptions } from "./config/cors";
@@ -41,7 +44,15 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/cities", citiesRoutes);
 app.use("/api/movies", movieDetailsRoutes);
 app.use("/api/v1/movies", movieRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+
+// Health check (HU-001 Escenario 1)
+app.use("/api/v1/health", healthRoutes);
+
 // Swagger
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Manejo global de errores (siempre al final)
+app.use(errorHandler);
 
 export default app;

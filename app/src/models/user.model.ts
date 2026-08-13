@@ -4,18 +4,15 @@
  * Modelo de Usuario
  * -----------------
  * Este archivo define el modelo `User` de Sequelize, que representa la tabla `users` en la base de datos.
- * 
- * Contiene:
- *  - Atributos del modelo (`UserAttributes`).
- *  - Atributos requeridos para la creación (`UserCreationAttributes`).
- *  - Definición del modelo con sus columnas y restricciones.
- * 
- * Este modelo es utilizado por los servicios y controladores para realizar operaciones CRUD.
+ *
+ * Es la entidad de autenticación del sistema: contiene el hash de la
+ * contraseña, rol, membresía, ciudad y género de perfil. Los catálogos
+ * referenciados (`roles`, `memberships`, `userGenres`, `cities`) se
+ * asocian en `src/models/index.ts`.
  */
 
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
-import City from "./cities.model"
 
 /**
  * Atributos principales de la entidad `User`.
@@ -24,21 +21,32 @@ export interface UserAttributes {
   id: number;
   name: string;
   email: string;
-  password: string;
-  location: number;
+  passwordHash: string;
+  roleId: number;
+  membershipId: number;
+  cityId: number | null;
+  userGenreId: number | null;
+  emailVerified: boolean;
+  accountStatus: string;
+  registeredAt: Date;
 }
 
 /**
  * Atributos utilizados para la creación de un nuevo usuario.
- * 
+ *
  * Se utiliza `Optional` para indicar que `id` no es requerido al momento
- * de la creación, ya que se genera automáticamente por la base de datos.
+ * de la creación (autoincrementable), junto con los campos que tienen
+ * valor por defecto en la base de datos.
  */
-export interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
+export interface UserCreationAttributes
+  extends Optional<
+    UserAttributes,
+    "id" | "emailVerified" | "accountStatus" | "registeredAt"
+  > {}
 
 /**
  * Clase que representa el modelo `User` en Sequelize.
- * 
+ *
  * Implementa los atributos definidos en `UserAttributes` y `UserCreationAttributes`.
  */
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -50,18 +58,44 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
 
   /** Dirección de correo electrónico única del usuario. */
   public email!: string;
-  
-  public password!: string;
 
-  public location!: number;
+  /** Hash (bcrypt) de la contraseña. Nunca se guarda en texto plano. */
+  public passwordHash!: string;
+
+  /** FK hacia `roles.id`. */
+  public roleId!: number;
+
+  /** FK hacia `memberships.id` (el service asigna 1 por defecto). */
+  public membershipId!: number;
+
+  /** FK hacia `cities.id` (opcional). */
+  public cityId!: number | null;
+
+  /** FK hacia `userGenres.id` (opcional). */
+  public userGenreId!: number | null;
+
+  /** Indica si el correo fue verificado. */
+  public emailVerified!: boolean;
+
+  /** Estado de la cuenta: activa, bloqueada, inactiva. */
+  public accountStatus!: string;
+
+  /** Fecha de registro. */
+  public registeredAt!: Date;
+
+  /**
+   * Serialización segura del usuario: excluye `passwordHash` de cualquier
+   * respuesta JSON para no exponer datos sensibles.
+   */
+  toJSON(): Record<string, unknown> {
+    const values = { ...this.get() } as Record<string, unknown>;
+    delete values.passwordHash;
+    return values;
+  }
 }
 
 /**
  * Inicialización del modelo `User` con la configuración de Sequelize.
- * 
- * - `id`: Entero autoincremental, clave primaria.
- * - `name`: Nombre obligatorio con máximo 100 caracteres.
- * - `email`: Correo electrónico único y obligatorio con máximo 100 caracteres.
  */
 User.init(
   {
@@ -75,33 +109,65 @@ User.init(
       allowNull: false,
     },
     email: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(150),
       unique: true,
       allowNull: false,
     },
-    password: {
+    passwordHash: {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    location: {
+    roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
+        model: "roles",
+        key: "id",
+      },
+    },
+    membershipId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "memberships",
+        key: "id",
+      },
+    },
+    cityId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
         model: "cities",
-        key: "id"
-      }
-    }
+        key: "id",
+      },
+    },
+    userGenreId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "userGenres",
+        key: "id",
+      },
+    },
+    emailVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    accountStatus: {
+      type: DataTypes.STRING(20),
+      defaultValue: "activa",
+    },
+    registeredAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
-    modelName: "User",      // Nombre del modelo en Sequelize
-    tableName: "users",     // Nombre de la tabla en la base de datos
-    timestamps: true,      // Incluye createdAt y updatedAt
+    modelName: "User",
+    tableName: "users",
+    timestamps: true,
   }
 );
-
-User.belongsTo(City, { foreignKey: 'location'});
-City.hasMany(User, { foreignKey: 'location'})
-
 
 export default User;
