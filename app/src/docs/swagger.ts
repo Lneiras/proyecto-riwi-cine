@@ -15,6 +15,7 @@
  */
 
 import swaggerJSDoc from "swagger-jsdoc";
+import path from "path";
 
 /**
  * Opciones de configuración para swagger-jsdoc.
@@ -27,20 +28,30 @@ import swaggerJSDoc from "swagger-jsdoc";
  *  - Indica la ruta donde se ubican los archivos con anotaciones JSDoc
  *    que describen los endpoints (en este caso, los archivos de rutas).
  */
-const options = {
+const options: swaggerJSDoc.Options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Multicine API",
+      title: "Riwi Cine API",
       version: "1.0.0",
-      description: "Documentación generada automáticamente con Swagger para la API de ejemplo.",
+      description: "API de gestión del sistema Multicine.",
     },
+    servers: [
+      {
+        url: "http://localhost:3000",
+        description: "Servidor local",
+      },
+    ],
   },
-  apis: ["./src/routes/*.ts"], // Escanea las rutas para extraer anotaciones Swagger
+  apis: [
+    path.join(__dirname, "../routes/*.ts").replace(/\\/g, "/"),
+    path.join(__dirname, "../routes/*.js").replace(/\\/g, "/"),
+  ],
 };
 
 /**
  * Esquema de especificación Swagger/OpenAPI generado dinámicamente.
  * Este objeto es exportado y utilizado por `swagger-ui-express`.
  */
+
 export const swaggerSpec = swaggerJSDoc(options);

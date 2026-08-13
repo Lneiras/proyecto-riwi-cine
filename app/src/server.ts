@@ -52,6 +52,12 @@ app.use("/api/v1/health", healthRoutes);
 // Swagger
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+//Swagger json format 
+
+app.get("/api/docs.json",(_req, res) =>{
+    res.status(200).json(swaggerSpec);
+})
+
 // Manejo global de errores (siempre al final)
 app.use(errorHandler);
 
