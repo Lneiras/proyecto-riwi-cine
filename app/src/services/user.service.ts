@@ -50,6 +50,13 @@ class UserService implements IUserService {
     });
   }
 
+  async verifyEmail(userId: number): Promise<User | null> {
+    const user = await UserRepository.findById(userId);
+    if (!user) throw new Error("Usuario no encontrado");
+
+    return await UserRepository.update(userId, { emailVerified: true });
+  }
+
   async findAll(): Promise<User[]> {
     return await UserRepository.findAll();
   }

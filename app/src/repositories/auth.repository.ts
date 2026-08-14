@@ -20,48 +20,6 @@ class AuthRepository implements IAuthRepository {
     return await User.create(data);
   }
 
-  /**
-   * Obtiene un usuario por su email.
-   */
-  async findByEmail(email: string): Promise<User | null> {
-    return await User.findOne({ where: { email } });
-  }
-
-  /**
-   * Persiste un refresh token emitido.
-   */
-  async saveRefreshToken(
-    userId: number,
-    token: string,
-    expiresAt: Date
-  ): Promise<RefreshToken> {
-    return await RefreshToken.create({ userId, token, expiresAt });
-    }
-
-    /**
-    * Busca un refresh token vigente (no revocado ni expirado). 
-    * 
-    * */
-  async findValidRefreshToken(token: string): Promise<RefreshToken | null> {
-    return await RefreshToken.findOne({
-      where: {
-        token,
-        revoked: false,
-        expiresAt: { [Op.gt]: new Date() },
-      },
-    });
-  }
-
-  /**
-   * Revoca un refresh token.
-   */
-  async revokeRefreshToken(token: string): Promise<void> {
-    const refreshToken = await RefreshToken.findOne({ where: { token } });
-    if (refreshToken) {
-      refreshToken.revoked = true;
-      await refreshToken.save();
-    }
-  }
 }
 
 export default new AuthRepository();
