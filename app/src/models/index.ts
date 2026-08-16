@@ -29,6 +29,7 @@ import City from "./cities.model";
 import User from "./user.model";
 import Role from "./role.model";
 import Membership from "./membership.model";
+import UserMembership from "./user-membership.model";
 import UserGenre from "./user-genre.model";
 import RefreshToken from "./refresh-token.model";
 import MovieGenre from "./movie-genre.model";
@@ -79,6 +80,13 @@ User.belongsTo(Role, { foreignKey: "roleId" });
 Membership.hasMany(User, { foreignKey: "membershipId" });
 User.belongsTo(Membership, { foreignKey: "membershipId" });
 
+// Membresías individuales del usuario (HU-006): historial con ID propio
+Membership.hasMany(UserMembership, { foreignKey: "membershipId" });
+UserMembership.belongsTo(Membership, { foreignKey: "membershipId" });
+
+User.hasMany(UserMembership, { foreignKey: "userId" });
+UserMembership.belongsTo(User, { foreignKey: "userId" });
+
 UserGenre.hasMany(User, { foreignKey: "userGenreId" });
 User.belongsTo(UserGenre, { foreignKey: "userGenreId" });
 
@@ -116,6 +124,7 @@ export {
   User,
   Role,
   Membership,
+  UserMembership,
   UserGenre,
   RefreshToken,
   MovieGenre,

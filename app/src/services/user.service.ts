@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model";
 import { CreateUserDto } from "../dto/create-user.dto";
 import UserRepository from "../repositories/user.repository";
+import UserMembershipRepository from "../repositories/user-membership.repository";
 import CityRepository from "../repositories/cities.repository";
 import Role from "../models/role.model";
 import { IUserService, AuthResult } from "./interfaces/user.service.interface";
@@ -36,18 +37,31 @@ class UserService implements IUserService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    return await UserRepository.create({
+    const membershipId = dto.membershipId ?? 1;
+
+    const user = await UserRepository.create({
       name: dto.name,
       email: dto.email,
       passwordHash,
       roleId,
-      membershipId: dto.membershipId ?? 1,
+      membershipId,
       cityId: dto.cityId ?? null,
       userGenreId: dto.userGenreId ?? null,
       emailVerified: false,
       accountStatus: "activa",
       registeredAt: new Date(),
     });
+
+    // HU-006: cada usuario adquiere una membresía individual con ID propio
+    await UserMembershipRepository.create({
+      userId: user.id,
+      membershipId,
+      startDate: new Date(),
+      endDate: null,
+      status: "activa",
+    });
+
+    return user;
   }
 
   async verifyEmail(userId: number): Promise<User | null> {

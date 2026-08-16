@@ -43,6 +43,7 @@ import { seedMemberships } from "./membership.seed";
 import { seedUserGenres } from "./user-genre.seed";
 import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
+import { seedUserMemberships } from "./user-membership.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -77,6 +78,7 @@ async function runSeeders(): Promise<void> {
 
   // Usuarios y suscripciones a estrenos
   const userIds = await seedUsers(roleIds, membershipIds);
+  await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
 
   console.log("\n✅ Seed completado con éxito.");

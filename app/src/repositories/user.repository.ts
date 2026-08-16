@@ -2,6 +2,8 @@
 
 import User, { UserCreationAttributes } from "../models/user.model";
 import RefreshToken from "../models/refresh-token.model";
+import UserMembership from "../models/user-membership.model";
+import Membership from "../models/membership.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
 import CityRepository from "./cities.repository";
 import { Op } from "sequelize";
@@ -27,15 +29,22 @@ class UserRepository implements IUserRepository {
    * Obtiene todos los usuarios.
    */
   async findAll(): Promise<User[]> {
-    return await User.findAll();
+    return await User.findAll({
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async findById(id: number): Promise<User | null> {
-    return await User.findByPk(id);
+    return await User.findByPk(id, {
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await User.findOne({ where: { email } });
+    return await User.findOne({
+      where: { email },
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async changeUserLocation(userId: number, cityId: number): Promise<User | null> {
