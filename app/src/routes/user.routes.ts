@@ -18,6 +18,7 @@
 
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth";
+import { loginRateLimiter } from "../middlewares/rateLimit";
 import {
   createUser,
   getUsers,
@@ -107,7 +108,7 @@ router.get("/", getUsers);
  *       500:
  *         description: Error interno del servidor
  */
-router.post("/auth", Auth);
+router.post("/auth", loginRateLimiter, Auth);
 
 /**
  * @swagger

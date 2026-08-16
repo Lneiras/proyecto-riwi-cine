@@ -3,24 +3,45 @@
 /**
  * Repository de Membresías de Usuario (HU-006)
  * --------------------------------------------
- * Operaciones de persistencia sobre la tabla `userMemberships`
- * (membresía individual adquirida por un usuario).
+ * Operaciones de persistencia sobre la tabla `userMemberships`.
  */
 
+import { Transaction } from "sequelize";
 import UserMembership, {
   UserMembershipCreationAttributes,
 } from "../models/user-membership.model";
 import { IUserMembershipRepository } from "./interfaces/user-membership.repository.interface";
 
 class UserMembershipRepository implements IUserMembershipRepository {
-  /** Crea una membresía individual para un usuario. */
-  async create(data: UserMembershipCreationAttributes): Promise<UserMembership> {
-    return await UserMembership.create(data);
+  async create(
+    data: UserMembershipCreationAttributes,
+    transaction?: Transaction
+  ): Promise<UserMembership> {
+    return await UserMembership.create(data, { transaction });
   }
 
-  /** Historial de membresías de un usuario. */
   async findByUserId(userId: number): Promise<UserMembership[]> {
     return await UserMembership.findAll({ where: { userId } });
+  }
+
+  async findActiveByUserId(
+    userId: number,
+    transaction?: Transaction
+  ): Promise<UserMembership | null> {
+    return await UserMembership.findOne({
+      where: { userId, status: "activa" },
+      transaction,
+    });
+  }
+
+  async findByMembershipCode(
+    membershipCode: string,
+    transaction?: Transaction
+  ): Promise<UserMembership | null> {
+    return await UserMembership.findOne({
+      where: { membershipCode },
+      transaction,
+    });
   }
 }
 

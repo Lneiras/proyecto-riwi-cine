@@ -4,9 +4,10 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model";
 import { CreateUserDto } from "../dto/create-user.dto";
 import UserRepository from "../repositories/user.repository";
-import UserMembershipRepository from "../repositories/user-membership.repository";
+import MembershipService from "./membership.service";
 import CityRepository from "../repositories/cities.repository";
 import Role from "../models/role.model";
+import Membership from "../models/membership.model";
 import { IUserService, AuthResult } from "./interfaces/user.service.interface";
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt";
 import { durationToMs } from "../utils/time";
@@ -28,16 +29,16 @@ class UserService implements IUserService {
       throw new Error("El correo electrónico ya se encuentra registrado.");
     }
 
-    // Rol por defecto: "Cliente"
-    let roleId = dto.roleId;
-    if (!roleId) {
-      const clientRole = await Role.findOne({ where: { name: "Cliente" } });
-      roleId = clientRole ? clientRole.id : 1;
-    }
+    // Los endpoints públicos no pueden autootorgarse rol ni membresía.
+    const clientRole = await Role.findOne({ where: { name: "Cliente" } });
+    if (!clientRole) throw new Error("El rol Cliente no está configurado");
 
+    const bronzeMembership = await Membership.findOne({ where: { name: "Bronce" } });
+    if (!bronzeMembership) throw new Error("La membresía Bronce no está configurada");
+
+    const roleId = clientRole.id;
+    const membershipId = bronzeMembership.id;
     const passwordHash = await bcrypt.hash(dto.password, 10);
-
-    const membershipId = dto.membershipId ?? 1;
 
     const user = await UserRepository.create({
       name: dto.name,
@@ -48,18 +49,12 @@ class UserService implements IUserService {
       cityId: dto.cityId ?? null,
       userGenreId: dto.userGenreId ?? null,
       emailVerified: false,
-      accountStatus: "activa",
+      accountStatus: "inactiva",
       registeredAt: new Date(),
     });
 
-    // HU-006: cada usuario adquiere una membresía individual con ID propio
-    await UserMembershipRepository.create({
-      userId: user.id,
-      membershipId,
-      startDate: new Date(),
-      endDate: null,
-      status: "activa",
-    });
+    // HU-006: la membresía individual recibe también un código único.
+    await MembershipService.createForUser(user.id, membershipId);
 
     return user;
   }
@@ -68,7 +63,7 @@ class UserService implements IUserService {
     const user = await UserRepository.findById(userId);
     if (!user) throw new Error("Usuario no encontrado");
 
-    return await UserRepository.update(userId, { emailVerified: true });
+    return await UserRepository.update(userId, { emailVerified: true, accountStatus: "activa" });
   }
 
   async findAll(): Promise<User[]> {
@@ -81,6 +76,9 @@ class UserService implements IUserService {
 
     const passwordValid = await bcrypt.compare(password, user.passwordHash);
     if (!passwordValid) return null;
+
+    // HU-006: una cuenta sin correo confirmado no puede autenticarse.
+    if (!user.emailVerified || user.accountStatus !== "activa") return null;
 
     const accessToken = signAccessToken(user.id, user.roleId);
     const refreshToken = signRefreshToken(user.id);
@@ -107,6 +105,10 @@ class UserService implements IUserService {
     const user = await UserRepository.findById(payload.sub);
     if (!user) {
       throw new Error("Usuario no encontrado");
+    }
+
+    if (!user.emailVerified || user.accountStatus !== "activa") {
+      throw new Error("La cuenta aún no está activa");
     }
 
     // Rotación: se revoca el token usado y se emite uno nuevo

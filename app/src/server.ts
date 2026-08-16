@@ -11,6 +11,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
 import countryRoutes from "./routes/country.routes";
 import userRoutes from "./routes/user.routes";
+import authRoutes from "./routes/auth.routes";
+import membershipRoutes from "./routes/membership.routes";
 import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
 import movieDetailsRoutes from "./routes/movie-details.routes";
@@ -38,6 +40,8 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 
 // Rutas
+app.use("/auth", authRoutes);
+app.use("/membership", membershipRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/countries", countryRoutes);
 app.use("/api/departments", departmentRoutes);

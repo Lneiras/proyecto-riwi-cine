@@ -3,50 +3,37 @@
 /**
  * Modelo de Membresía de Usuario (intermedia usuario ↔ membresía)
  * -----------------------------------------------------------------
- * Cada fila representa UNA membresía individual adquirida por un usuario:
- * le da un identificador propio (id) e indica qué tipo de membresía
- * (membershipId) le corresponde, junto con la vigencia y el estado.
- *
- * Permite que un usuario tenga historial de membresías (activas y
- * pasadas) manteniendo `users.membershipId` como la membresía vigente.
- * Tabla `userMemberships`.
+ * Cada fila representa UNA membresía digital individual adquirida por un
+ * usuario. Además del tipo de membresía, HU-006 exige un código único.
  */
 
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
+import { generateMembershipCode } from "../helpers/membership-code";
 
 export interface UserMembershipAttributes {
   id: number;
   userId: number;
   membershipId: number;
+  membershipCode: string | null;
   startDate: Date;
   endDate: Date | null;
   status: string;
 }
 
 export interface UserMembershipCreationAttributes
-  extends Optional<UserMembershipAttributes, "id"> {}
+  extends Optional<UserMembershipAttributes, "id" | "membershipCode"> {}
 
 class UserMembership
   extends Model<UserMembershipAttributes, UserMembershipCreationAttributes>
   implements UserMembershipAttributes
 {
-  /** Identificador individual de esta membresía adquirida. */
   public id!: number;
-
-  /** FK hacia `users.id`. */
   public userId!: number;
-
-  /** FK hacia `memberships.id` (tipo de membresía). */
   public membershipId!: number;
-
-  /** Fecha de inicio de vigencia. */
+  public membershipCode!: string | null;
   public startDate!: Date;
-
-  /** Fecha de fin de vigencia (null = sin vencimiento). */
   public endDate!: Date | null;
-
-  /** Estado: activa, inactiva, vencida. */
   public status!: string;
 }
 
@@ -72,6 +59,12 @@ UserMembership.init(
         model: "memberships",
         key: "id",
       },
+    },
+    membershipCode: {
+      type: DataTypes.STRING(40),
+      allowNull: true,
+      unique: true,
+      defaultValue: generateMembershipCode,
     },
     startDate: {
       type: DataTypes.DATE,
