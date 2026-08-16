@@ -44,10 +44,15 @@ class MovieService {
         if(format === "4DX") finalPrice += 10000
         if(format === "IMAX") finalPrice += 15000
 
-        const hour = new Date(showtime.basePrice).getHours();
+        const roomName = (showtime as any).room?.name?.toUpperCase() || "";
+        if (roomName.includes("VIP")){
+            finalPrice += 8000;
+        }
+
+        const hour = new Date(showtime.dateTime).getHours();
         if (hour >= 18) {
             finalPrice += 3000;
-        };
+        }
 
         return {
             id: id,
