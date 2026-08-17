@@ -27,11 +27,15 @@ class MovieService {
         if(!showtime){
             throw new Error("Showtime not found");
         };
+        const started = new Date(showtime.dateTime).getTime() <= Date.now();
+        if (started) {
+            throw new Error("Function already started")
+        }
         return showtime
     }
 
     async getFunctionPrice(id:number){
-        const showtime = await repository.findFunctionById(id);
+        const showtime = await this.getFunctionById(id);
         if(!showtime){
             throw new Error("Showtime not found");
         };
