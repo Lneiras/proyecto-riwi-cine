@@ -14,7 +14,7 @@ const requiredVars = [
   "POSTGRES_USER",
   "POSTGRES_PASSWORD",
   "NODE_ENV",
-  "JWT_SECRET",
+  "JWT_SECRET", 
 ];
 
 /**

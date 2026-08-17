@@ -7,6 +7,7 @@
  * - Arrancar el servidor (app.listen).
  * - Es el que realmente ejecutas cuando corres npm run dev o docker-compose up.
  */
+import "dotenv/config";
 
 import app from "./server";
 import sequelize from "./config/database";
@@ -17,6 +18,9 @@ import premiereNotificationJob from "./jobs/premiere-notification.job";
 // para que `sequelize.sync()` cree sus tablas al arrancar, sin importar
 // si su ruta ya está montada en server.ts o no.
 import "./models";
+
+import { connectRedis } from "./config/redis";
+import seatLockCleanupJob from "./jobs/seat-lock-cleanup.job";
 
 const PORT = process.env.APP_PORT || 3000;
 const start = async () => {
@@ -31,8 +35,12 @@ const start = async () => {
       alter: true
     }); // crea tablas si no existen
 
+    await connectRedis()
+
+    await seatLockCleanupJob.start()
+
     // HU-005 Task 2: job que notifica a suscriptores cuando la película ya está en cartelera
-    premiereNotificationJob.start();
+    await premiereNotificationJob.start();
 
     app.listen(PORT, () => {
       console.log(`Servidor escuchando en puerto ${PORT}`);

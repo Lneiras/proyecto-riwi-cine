@@ -35,7 +35,6 @@ class CityRepository {
         return await City.findAll({ where: { departmentId } });
     }
 
-
 }
 
 export default new CityRepository();
