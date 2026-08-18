@@ -25,4 +25,8 @@ export interface IUserService {
   changeUserLocation(userId: number, location: string): Promise<User | null>;
 
   findById(id: number): Promise<User | null>;
+
+  // esto es lo que permite actualizar el perfil del usuario, recibe el id del usuario
+  // y un objeto con los campos a actualizar, en este caso solo el nombre
+  updateProfile(userId: number, data: Partial<{ name: string }>): Promise<User>;
 }

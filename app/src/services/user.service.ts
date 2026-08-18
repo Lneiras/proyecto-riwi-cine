@@ -111,6 +111,12 @@ class UserService implements IUserService {
   async findById(id: number): Promise<User | null> {
     return await UserRepository.findById(id);
   }
+
+  // esto es lo que permite actualizar el perfil del usuario, recibe el id del usuario
+  // y un objeto con los campos a actualizar, en este caso solo el nombre
+  async updateProfile(userId: number, data: Partial<{ name: string }>): Promise<User> {
+  return await UserRepository.update(userId, data);
+  }
 }
 
 export default new UserService();
