@@ -16,13 +16,36 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV}
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - db
+      - redis
     deploy:
       resources:
         limits:
           cpus: "${APP_CPU_LIMIT}"
           memory: ${APP_MEM_LIMIT}
+    networks:
+      - backend
+  realtime:
+    build: ./app
+    container_name: riwi-cine-realtime
+    working_dir: /usr/src/app
+    command: npx ts-node-dev --respawn --transpile-only src/realtime/server.ts
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    volumes:
+      - ./app:/usr/src/app
+      - ./.env:/usr/src/app/.env
+    env_file:
+      - ./.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - REDIS_URL=redis://redis:6379
+      - SOCKET_PORT=${SOCKET_PORT}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+    depends_on:
+      - redis
     networks:
       - backend
 
@@ -65,8 +88,20 @@ services:
     networks:
       - backend
 
+  redis:
+    image: redis:7-alpine
+    container_name: ${REDIS_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
 volumes:
   db_data:
+  redis_data:
 
 networks:
   backend:
