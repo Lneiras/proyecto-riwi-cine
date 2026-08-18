@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth";
-import { getMembership, getMembershipBenefits } from "../controllers/membership.controller";
+import { getMembership, getMembershipBenefits, postCalculateMembershipDiscount } from "../controllers/membership.controller";
 
 const router = Router();
 
@@ -52,5 +52,41 @@ router.get("/", authenticate, getMembership);
  *         description: Error interno del servidor
  */
 router.get("/benefits", authenticate, getMembershipBenefits);
+
+
+/**
+ * @swagger
+ * /api/v1/membership/discount/calculate:
+ *   post:
+ *     summary: Calcula el descuento de boletas/confitería según el nivel de membresía
+ *     tags: [Membership]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ticketAmount:
+ *                 type: number
+ *                 example: 50000
+ *               snackAmount:
+ *                 type: number
+ *                 example: 15000
+ *     responses:
+ *       200:
+ *         description: Descuento calculado correctamente
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: Token ausente o inválido
+ *       404:
+ *         description: El usuario no tiene una membresía asociada
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.post("/discount/calculate", authenticate, postCalculateMembershipDiscount);
 
 export default router;
