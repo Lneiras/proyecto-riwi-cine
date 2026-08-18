@@ -17,7 +17,7 @@ export function initializeSocket(httpServer: HttpServer): Server {
     console.log(`Socket conectado: ${socket.id}`);
 
     socket.on("join-function", (functionId: number) => {
-      if (!Number.isInteger(functionId)) {
+      if (!Number.isInteger(functionId) || functionId <= 0) {
         return;
       }
 
@@ -25,7 +25,7 @@ export function initializeSocket(httpServer: HttpServer): Server {
     });
 
     socket.on("leave-function", (functionId: number) => {
-      if (!Number.isInteger(functionId)) {
+      if (!Number.isInteger(functionId) || functionId <= 0) {
         return;
       }
 

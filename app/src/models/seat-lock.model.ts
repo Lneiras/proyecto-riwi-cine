@@ -11,6 +11,7 @@ export interface SeatLockAttributes {
   showtimeId: number;
   seatId: number;
   userId: number;
+  lockToken: string;
   lockedAt: Date;
   expiresAt: Date;
   status: string;
@@ -33,6 +34,7 @@ class SeatLock
   public showtimeId!: number;
   public seatId!: number;
   public userId!: number;
+  public lockToken!: string;
   public lockedAt!: Date;
   public expiresAt!: Date;
   public status!: string;
@@ -58,6 +60,11 @@ SeatLock.init(
 
     userId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    lockToken: {
+      type: DataTypes.UUID,
       allowNull: false,
     },
 

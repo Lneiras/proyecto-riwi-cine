@@ -3,7 +3,16 @@ import sequelize from "../config/database";
 import seatRepository from "../repositories/seat.repository";
 import { redis, SEAT_EVENT_CHANNEL, SEAT_LOCK_PREFIX } from "../config/redis";
 
-const TTL_SECONDS = Number(process.env.SEAT_LOCK_TTL_SECONDS || 300);
+const TTL_SECONDS = Number(process.env.SEAT_LOCK_TTL_SECONDS);
+const MAX_SEATS_PER_LOCK = Number(process.env.MAX_SEATS_PER_LOCK);
+
+if (!Number.isInteger(TTL_SECONDS) || TTL_SECONDS <= 0) {
+  throw new Error("SEAT_LOCK_TTL_SECONDS debe ser un entero mayor que 0");
+}
+
+if (!Number.isInteger(MAX_SEATS_PER_LOCK) || MAX_SEATS_PER_LOCK <= 0) {
+  throw new Error("MAX_SEATS_PER_LOCK debe ser un entero mayor que 0");
+}
 
 interface SeatEvent {
     type: "seat:locked" | "seat:released";
@@ -38,6 +47,18 @@ class SeatService {
       showtimeId,
       roomId: showtime.roomId,
       seats: seats.map((seat) => {
+
+        if (seat.status === "disabled") {
+          return {
+            id: seat.id,
+            row: seat.row,
+            number: seat.number,
+            type: seat.type,
+            status: "disabled",
+            expiresAt: null,
+            };
+        }
+
         const lock = lockBySeat.get(seat.id);
 
         if (soldSeatIds.has(seat.id)) {
@@ -80,13 +101,26 @@ class SeatService {
     }
 
     const uniqueSeatIds = [...new Set(seatIds)];
+
+    if (uniqueSeatIds.length > MAX_SEATS_PER_LOCK) { 
+      throw new Error( `No puedes bloquear más de ${MAX_SEATS_PER_LOCK} asientos` ); }
+
     const showtime = await seatRepository.findShowtimeById(showtimeId);
 
     if (!showtime) {
       throw new Error("Función no encontrada");
     }
 
+    const basePrice = await seatRepository.findShowtimePrice(showtimeId);
+
+    if (basePrice === null) {
+      throw new Error("Función no encontrada");
+    }
+
     const seats = await seatRepository.findSeatsByRoomId(showtime.roomId);
+
+    const seatsById = new Map(seats.map((seat) => [seat.id, seat]));
+
     const validSeatIds = new Set(seats.map((seat) => seat.id));
 
     for (const seatId of uniqueSeatIds) {
@@ -95,12 +129,34 @@ class SeatService {
       }
     }
 
+    for (const seatId of uniqueSeatIds) {
+      const seat = seatsById.get(seatId);
+
+      if (!seat) {
+        throw new Error(`El asiento ${seatId} no pertenece a la sala de la función`);
+      }
+
+      if (seat.status === "disabled") {
+        throw new Error(`El asiento ${seatId} está inhabilitado`);
+      }
+
+      if (
+        seat.type === "Preferencial" &&
+        process.env.PREFERENTIAL_SEAT_POLICY === "deny"
+      ) {
+        throw new Error(
+          `El asiento preferencial ${seatId} no puede ser seleccionado actualmente`
+        );
+      }
+    }
+
     const expiresAt = new Date(Date.now() + TTL_SECONDS * 1000);
 
     /*
      * Identifica exclusivamente este bloqueo Redis.
      */
-    const redisValue = `${userId}:${randomUUID()}`;
+    const lockToken = randomUUID(); 
+    const redisValue = `${userId}:${lockToken}`;
     const acquiredKeys: string[] = [];
 
     try {
@@ -142,16 +198,16 @@ class SeatService {
           );
 
           if (!existingLock) {
-            await seatRepository.createLock(
-              {
-                showtimeId,
-                seatId,
-                userId,
-                expiresAt,
-              },
-              transaction
+            await seatRepository.createLock( { 
+                showtimeId, 
+                seatId, 
+                userId, 
+                lockToken, 
+                expiresAt, 
+              }, 
+              transaction 
             );
-            continue;
+              continue;
           }
 
           const expired = existingLock.expiresAt.getTime() <= Date.now();
@@ -164,6 +220,7 @@ class SeatService {
             existingLock,
             {
               userId,
+              lockToken,
               expiresAt,
             },
             transaction
@@ -171,6 +228,8 @@ class SeatService {
         }
       });
 
+      const total = uniqueSeatIds.length * basePrice;
+      
       /*
        * PostgreSQL confirmó. Ahora notificamos.
        */
@@ -188,7 +247,11 @@ class SeatService {
         showtimeId,
         expiresAt,
         seatIds: uniqueSeatIds,
+        quantity: uniqueSeatIds.length,
+        unitPrice: basePrice,
+        total,
       };
+
     } catch (error) {
       /*
        * PostgreSQL falló. Liberamos solamente las keys que este request consiguió.
@@ -219,7 +282,7 @@ class SeatService {
   }
 
   async releaseSeats(showtimeId: number, seatIds: number[], userId: number) {
-    const releasedSeats: number[] = [];
+    const releasedLocks: { seatId: number; lockToken: string; }[] = [];
 
     await sequelize.transaction(async (transaction) => {
     for (const seatId of seatIds) {
@@ -241,18 +304,19 @@ class SeatService {
         transaction
         );
 
-        releasedSeats.push(seatId);
+        releasedLocks.push({
+          seatId,
+          lockToken: lock.lockToken,
+        });
         }
     });
 
     /*
      * Eliminar Redis de manera segura (vía script LUA).
      */
-    for (const seatId of releasedSeats) {
-    const key = this.getRedisKey(showtimeId, seatId);
-    const currentValue = await redis.get(key);
+    for (const released of releasedLocks) {
+    const key = this.getRedisKey(showtimeId, released.seatId);
 
-    if (currentValue) {
     const script = `
         if redis.call("GET", KEYS[1]) == ARGV[1]
         then
@@ -263,144 +327,195 @@ class SeatService {
 
     await redis.eval(script, {
         keys: [key],
-        arguments: [currentValue],
+        arguments: [`${userId}:${released.lockToken}`],
     });
-    }
 
     await this.publish({
     type: "seat:released",
     showtimeId,
-    seatId,
+    seatId: released.seatId,
     status: "available",
     expiresAt: null,
     });
     }
 
-    return releasedSeats;
+    return releasedLocks.map((released)=> released.seatId);
     }
 
-    async releaseExpiredSeat(
-    showtimeId: number,
-    seatId: number
-    ): Promise<boolean> {
-    const key = this.getRedisKey(showtimeId, seatId);
+  async releaseExpiredSeat(
+  showtimeId: number,
+  seatId: number
+): Promise<boolean> {
+  const key = this.getRedisKey(showtimeId, seatId);
+
+  /*
+   * Si existe una key Redis, significa que todavía existe
+   * un bloqueo vigente.
+   *
+   * Esto también protege contra una carrera:
+   *
+   * Lock A expira
+   *      ↓
+   * Usuario B consigue el asiento
+   *      ↓
+   * llega tarde el evento de A
+   *
+   * Si la key existe nuevamente, NO tocamos PostgreSQL.
+   */
+  const exists = await redis.exists(key);
+
+  if (exists) {
+    return false;
+  }
+
+  let released = false;
+
+  await sequelize.transaction(async (transaction) => {
+    const lock = await seatRepository.findLockForUpdate(
+      showtimeId,
+      seatId,
+      transaction
+    );
+
+    if (!lock) {
+      return;
+    }
+
+    if (lock.status !== "active") {
+      return;
+    }
+
+    if (lock.expiresAt.getTime() > Date.now()) {
+      return;
+    }
+
+    await seatRepository.markReleased(
+      showtimeId,
+      seatId,
+      "expired",
+      transaction
+    );
+
+    released = true;
+  });
+
+  if (!released) {
+    return false;
+  }
+
+  await this.publish({
+    type: "seat:released",
+    showtimeId,
+    seatId,
+    status: "available",
+    expiresAt: null,
+  });
+
+  return true;
+}
+
+  async sweepExpiredLocks(): Promise<void> {
+  const expired = await seatRepository.findExpiredLocks();
+
+  for (const lock of expired) {
+    const key = this.getRedisKey(lock.showtimeId, lock.seatId);
+
+    /*
+     * Si existe nuevamente una key Redis,
+     * significa que posiblemente otro usuario
+     * ya consiguió el asiento.
+     *
+     * NO modificamos PostgreSQL.
+     */
     const exists = await redis.exists(key);
 
     if (exists) {
-        return false;
+      continue;
     }
 
     let released = false;
 
     await sequelize.transaction(async (transaction) => {
-        const lock = await seatRepository.findLockForUpdate(
-        showtimeId,
-        seatId,
-        transaction
-        );
-
-        if (!lock) return;
-        if (lock.status !== "active") return;
-        if (lock.expiresAt.getTime() > Date.now()) return;
-
-        await seatRepository.markReleased(
-        showtimeId,
-        seatId,
-        "expired",
-        transaction
-        );
-
-        released = true;
-    });
-
-    if (released) {
-        await this.publish({
-        type: "seat:released",
-        showtimeId,
-        seatId,
-        status: "available",
-        expiresAt: null,
-        });
-    }
-
-    return released;
-}
-
-  async sweepExpiredLocks() {
-    const expired = await seatRepository.findExpiredLocks();
-
-    for (const lock of expired) {
-    const key = this.getRedisKey(lock.showtimeId, lock.seatId);
-
-    /*
-    * Si existe un nuevo lock Redis, no tocamos el registro.
-    */
-    const exists = await redis.exists(key);
-
-    if (exists) {
-    continue;
-    }
-
-    await sequelize.transaction(async (transaction) => {
-    const currentLock = await seatRepository.findLockForUpdate(
+      const currentLock = await seatRepository.findLockForUpdate(
         lock.showtimeId,
         lock.seatId,
         transaction
-        );
+      );
 
-        if (!currentLock) return;
-        if (currentLock.status !== "active") return;
-        if (currentLock.expiresAt.getTime() > Date.now()) return;
+      if (!currentLock) {
+        return;
+      }
 
-        await seatRepository.markReleased(
+      if (currentLock.status !== "active") {
+        return;
+      }
+
+      if (currentLock.expiresAt.getTime() > Date.now()) {
+        return;
+      }
+
+      await seatRepository.markReleased(
         lock.showtimeId,
         lock.seatId,
         "expired",
         transaction
-        );
+      );
+
+      released = true;
     });
+
+    if (!released) {
+      continue;
+    }
 
     await this.publish({
-        type: "seat:released",
-        showtimeId: lock.showtimeId,
-        seatId: lock.seatId,
-        status: "available",
-        expiresAt: null,
+      type: "seat:released",
+      showtimeId: lock.showtimeId,
+      seatId: lock.seatId,
+      status: "available",
+      expiresAt: null,
     });
-    }
+  }
 }
 
 async getSummary(showtimeId: number) {
 
-    const result = await this.getSeats(showtimeId);
+  const result = await this.getSeats(showtimeId);
+  const price = await seatRepository.findShowtimePrice(showtimeId);
 
-    const summary = {
+  if (price === null) {
+    throw new Error("Función no encontrada");
+  }
+
+  const summary = {
     total: result.seats.length,
     available: 0,
     reserved: 0,
     sold: 0,
     byType: {
-        General: 0,
-        Preferencial: 0,
-        VIP: 0,
+      General: 0,
+      Preferencial: 0,
+      VIP: 0,
     },
-    };
+  };
 
-    for (const seat of result.seats) {
-        if (seat.status === "available") summary.available++;
-        if (seat.status === "reserved") summary.reserved++;
-        if (seat.status === "sold") summary.sold++;
+  for (const seat of result.seats) {
+    if (seat.status === "available") summary.available++;
+    if (seat.status === "reserved") summary.reserved++;
+    if (seat.status === "sold") summary.sold++;
 
-        if (seat.type in summary.byType) {
-            summary.byType[seat.type as keyof typeof summary.byType]++;
-        }
+    if (seat.type in summary.byType) {
+      summary.byType[seat.type as keyof typeof summary.byType]++;
     }
+  }
 
-    return {
+  return {
     showtimeId,
     ...summary,
-    };
-    }
+    basePrice: price,
+  };
+}
+
 }
 
 export default new SeatService();

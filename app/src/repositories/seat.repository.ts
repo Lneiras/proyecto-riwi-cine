@@ -98,6 +98,7 @@ class SeatRepository {
       showtimeId: number;
       seatId: number;
       userId: number;
+      lockToken: string;
       expiresAt: Date;
     },
     transaction: Transaction
@@ -112,6 +113,8 @@ class SeatRepository {
 
         userId:
           data.userId,
+
+        lockToken: data.lockToken,
 
         expiresAt:
           data.expiresAt,
@@ -128,6 +131,7 @@ class SeatRepository {
     lock: SeatLock,
     data: {
       userId: number;
+      lockToken: string;
       expiresAt: Date;
     },
     transaction: Transaction
@@ -136,6 +140,9 @@ class SeatRepository {
       {
         userId:
           data.userId,
+
+        lockToken:
+          data.lockToken,
 
         expiresAt:
           data.expiresAt,
@@ -190,6 +197,31 @@ class SeatRepository {
       },
     });
   }
+
+  async findDisabledSeatIds(seatIds: number[]): Promise<number[]> {
+  const seats = await Seat.findAll({
+    attributes: ["id"],
+    where: {
+      id: {
+        [Op.in]: seatIds,
+      },
+      status: "disabled",
+    },
+  });
+
+  return seats.map((seat) => seat.id);
+}
+
+async findShowtimePrice(showtimeId: number): Promise<number | null> {
+  const showtime = await Showtime.findByPk(showtimeId);
+
+  if (!showtime) {
+    return null;
+  }
+
+  return Number(showtime.basePrice);
+}
 }
 
 export default new SeatRepository();
+

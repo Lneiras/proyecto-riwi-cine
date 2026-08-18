@@ -12,6 +12,7 @@ export interface SeatAttributes {
   row: string;
   number: number;
   type: string;
+  status: string;
 }
 
 export interface SeatCreationAttributes
@@ -23,6 +24,7 @@ class Seat extends Model<SeatAttributes,SeatCreationAttributes> implements SeatA
   public row!: string;
   public number!: number;
   public type!: string;
+  public status!: string;
 }
 
 Seat.init(
@@ -53,6 +55,12 @@ Seat.init(
       allowNull: false,
       defaultValue: "General",
     },
+
+    status: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "available",
+    }
   },
   {
     sequelize,

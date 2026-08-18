@@ -24,7 +24,9 @@ export const getSeats = async (
     const message =
       error instanceof Error ? error.message : "Error obteniendo asientos";
 
-    return res.status(500).json({
+    const status = message === "Función no encontrada" ? 404 : 500;
+
+    return res.status(status).json({
       success: false,
       error: message,
     });
@@ -49,6 +51,7 @@ export const lockSeats = async (
 
     if (
       !Number.isInteger(functionId) ||
+      functionId <= 0 ||
       !Array.isArray(seatIds) ||
       seatIds.length === 0 ||
       !seatIds.every(Number.isInteger)
@@ -76,7 +79,9 @@ export const lockSeats = async (
 
     const status =
       message.includes("ya está reservado") ||
-      message.includes("ya fue vendido")
+      message.includes("ya fue vendido") ||
+      message.includes("inhabilitado") ||
+      message.includes("preferencial")
         ? 409
         : 400;
 
@@ -103,7 +108,11 @@ export const releaseSeats = async (
       seatIds?: number[];
     };
 
-    if (!Number.isInteger(functionId) || !Array.isArray(seatIds)) {
+    if (!Number.isInteger(functionId) || 
+        functionId <= 0 ||
+        !Array.isArray(seatIds) ||
+        seatIds.length === 0 ||
+        !seatIds.every(Number.isInteger)) {
       return res.status(400).json({
         error: "functionId y seatIds son obligatorios",
       });
@@ -128,7 +137,12 @@ export const releaseSeats = async (
         ? error.message
         : "No fue posible liberar los asientos";
 
-    return res.status(500).json({
+    const status =
+      message.includes("no pertenece") || message.includes("inválido")
+        ? 400
+        : 500;
+
+    return res.status(status).json({
       success: false,
       error: message,
     });
@@ -142,7 +156,9 @@ export const getReservationSummary = async (
   try {
     const functionId = Number(req.query.functionId);
 
-    if (!Number.isInteger(functionId)) {
+    if (!Number.isInteger(functionId) ||
+        functionId <= 0
+    ) {
       return res.status(400).json({
         error: "functionId es obligatorio",
       });
@@ -160,7 +176,10 @@ export const getReservationSummary = async (
         ? error.message
         : "No fue posible obtener el resumen";
 
-    return res.status(500).json({
+    const status= 
+      message === "función no encontrada" ? 404 : 500;
+
+    return res.status(status).json({
       success: false,
       error: message,
     });

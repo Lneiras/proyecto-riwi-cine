@@ -50,6 +50,16 @@ class SeatLockCleanupJob {
       }
     );
 
+    const intervalMs = Number(process.env.SEAT_LOCK_SWEEP_MS || 5000);
+
+    setInterval(async () => {
+      try {
+        await seatService.sweepExpiredLocks();
+      } catch (error) {
+        console.error("Error en fallback de expiración de asientos:", error);
+      }
+    }, intervalMs);
+
     console.log("Seat lock cleanup job iniciado.");
   }
 }
