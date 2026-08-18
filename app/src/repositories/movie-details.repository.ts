@@ -71,23 +71,6 @@ class MovieRepository {
         });
 
     }
-
-    async findFunctionById(id:number): Promise<Showtime | null>{
-        return await Showtime.findByPk(id,{
-            include:[
-                {
-                    model: Format
-                },
-                {
-                    model: Language
-                },
-                {
-                    model: Room,
-                    include:[Cinema] 
-                }
-            ]
-        });
-    }
 }
 
 export default new MovieRepository();

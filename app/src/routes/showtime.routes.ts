@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getFunctionById, getFunctionPrice} from "../controllers/movie-details.controller";
+import { getFunctionById, getFunctionPrice} from "../controllers/function.controller";
 
 const router = Router();
 
