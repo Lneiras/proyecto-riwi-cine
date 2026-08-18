@@ -3,6 +3,11 @@
 import MembershipRepository from "../repositories/membership.repository";
 import { IMembershipService, MembershipBenefits } from "./interfaces/membership.service.interface";
 import Membership from "../models/membership.model";
+import {
+    calculateMembershipDiscount,
+    MembershipDiscountInput,
+    MembershipDiscountResult,
+} from "../utils/membershipDiscountCalculator";
 
 class MembershipService implements IMembershipService {
     async getByUserId(userId: number): Promise<Membership> {
@@ -23,6 +28,18 @@ class MembershipService implements IMembershipService {
             snackDiscount: Number(membership.snackDiscount),
             minPoints: membership.minPoints,
         };
+    }
+
+    async calculateDiscount(userId: number, input: MembershipDiscountInput): Promise<MembershipDiscountResult> {
+        const membership = await this.getByUserId(userId);
+
+        return calculateMembershipDiscount(
+        {
+            ticketDiscountPercent: Number(membership.ticketDiscount),
+            snackDiscountPercent: Number(membership.snackDiscount),
+        },
+        input
+        );
     }
 }
 
