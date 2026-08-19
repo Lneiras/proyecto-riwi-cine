@@ -24,14 +24,14 @@ class FunctionService {
 
         let finalPrice = Number(showtime.basePrice);
 
-        const format = (showtime as any).format?.name?.toUpperCase();
+        const format = (showtime as any).Format?.name?.toUpperCase();
 
         if (format === "3D") finalPrice += 5000
         if (format === "4DX") finalPrice += 10000
         if (format === "IMAX") finalPrice += 15000
 
-        const roomName = (showtime as any).room?.name?.toUpperCase() || "";
-        if (roomName.includes("VIP")) {
+        const roomName = (showtime as any).Room?.numberName?.toUpperCase() || "";
+        if (roomName.includes("SALA VIP")) {
             finalPrice += 8000;
         }
 
