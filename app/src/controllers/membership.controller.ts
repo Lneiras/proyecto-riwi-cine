@@ -75,3 +75,21 @@ export const postCalculateMembershipDiscount = async (req: Request, res: Respons
         throw new AppError(error.message, 500, "INTERNAL_ERROR");
     }
 };
+
+/**
+ * GET /api/v1/membership/qr
+ * Obtiene (o genera si es la primera vez) el código QR de membresía
+ * del usuario autenticado 
+ */
+export const getMembershipQr = async (req: Request, res: Response): Promise<Response | void> => {
+    try {
+        const userId = req.userId;
+        if (!userId) throw new AppError("Sesión requerida.", 401, "UNAUTHORIZED");
+
+        const result = await membershipService.getOrCreateQr(userId);
+        return successResponse(res, result, 200);
+    } catch (error: any) {
+        if (error instanceof AppError) throw error;
+        throw new AppError(error.message, 500, "INTERNAL_ERROR");
+    }
+};

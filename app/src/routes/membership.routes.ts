@@ -2,7 +2,8 @@
 
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth";
-import { getMembership, getMembershipBenefits, postCalculateMembershipDiscount } from "../controllers/membership.controller";
+import { getMembership, getMembershipBenefits, postCalculateMembershipDiscount, getMembershipQr  } from "../controllers/membership.controller";
+
 
 const router = Router();
 
@@ -88,5 +89,23 @@ router.get("/benefits", authenticate, getMembershipBenefits);
  *         description: Error interno del servidor
  */
 router.post("/discount/calculate", authenticate, postCalculateMembershipDiscount);
+
+/**
+ * @swagger
+ * /api/v1/membership/qr:
+ *   get:
+ *     summary: Obtiene el código QR único e intransferible de membresía
+ *     tags: [Membership]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Código QR obtenido correctamente
+ *       401:
+ *         description: Token ausente o inválido
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get("/qr", authenticate, getMembershipQr);
 
 export default router;

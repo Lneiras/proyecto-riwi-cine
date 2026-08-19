@@ -40,7 +40,7 @@ import Room from "./room.model";
 import Movie from "./movie.model";
 import Showtime from "./showtime.model";
 import PremiereNotification from "./premiere-notification.model";
-
+import MembershipCode from "./membership-code.model";
 
 /**
  * Asociaciones entre modelos
@@ -109,6 +109,10 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
+User.hasOne(MembershipCode, { foreignKey: "userId" });
+MembershipCode.belongsTo(User, { foreignKey: "userId" });
+
+
 export {
   Country,
   Department,
@@ -127,4 +131,5 @@ export {
   Movie,
   Showtime,
   PremiereNotification,
+  MembershipCode,
 };
