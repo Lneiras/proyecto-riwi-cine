@@ -32,7 +32,8 @@ class EmailService {
       (process.env.NODE_ENV === "production" ? "resend" : "console");
 
     if (deliveryMode === "console" && process.env.NODE_ENV !== "production") {
-      console.log(`✉ Activación HU-006 para ${data.to}: ${activationUrl}`);
+      console.log(`✉ Activación HU-006 para ${data.to}: ${activationUrl}`)
+      console.log(`activation token: ${data.token}`);
       return;
     }
 

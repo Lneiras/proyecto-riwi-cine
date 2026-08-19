@@ -90,6 +90,7 @@ const router = Router();
  *                 example: false
  *               captchaToken:
  *                 type: string
+ *                 example: 0x4AAAAAAEVnSekJb5WveOdk
  *                 description: Token generado por Cloudflare Turnstile
  *     responses:
  *       201:
