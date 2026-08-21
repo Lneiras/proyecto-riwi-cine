@@ -64,7 +64,8 @@ export async function seedUsers(
         membershipId,
         cityId: data.cityId,
         userGenreId: null,
-        emailVerified: false,
+        // Usuarios demo ya verificados para conservar las pruebas de login existentes.
+        emailVerified: true,
         accountStatus: "activa",
       },
     });

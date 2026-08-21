@@ -29,6 +29,10 @@ import City from "./cities.model";
 import User from "./user.model";
 import Role from "./role.model";
 import Membership from "./membership.model";
+import UserMembership from "./user-membership.model";
+import EmailVerificationToken from "./email-verification-token.model";
+import BonusWallet from "./bonus-wallet.model";
+import NotificationPreference from "./notification-preference.model";
 import UserGenre from "./user-genre.model";
 import RefreshToken from "./refresh-token.model";
 import MovieGenre from "./movie-genre.model";
@@ -81,11 +85,32 @@ User.belongsTo(Role, { foreignKey: "roleId" });
 Membership.hasMany(User, { foreignKey: "membershipId" });
 User.belongsTo(Membership, { foreignKey: "membershipId" });
 
+// Membresías individuales del usuario (HU-006): historial con ID propio
+Membership.hasMany(UserMembership, { foreignKey: "membershipId" });
+UserMembership.belongsTo(Membership, { foreignKey: "membershipId" });
+
+User.hasMany(UserMembership, { foreignKey: "userId" });
+UserMembership.belongsTo(User, { foreignKey: "userId" });
+
+// Recursos creados automáticamente durante el registro (HU-006)
+User.hasMany(EmailVerificationToken, { foreignKey: "userId" });
+EmailVerificationToken.belongsTo(User, { foreignKey: "userId" });
+
+User.hasOne(BonusWallet, { foreignKey: "userId" });
+BonusWallet.belongsTo(User, { foreignKey: "userId" });
+
+User.hasOne(NotificationPreference, { foreignKey: "userId" });
+NotificationPreference.belongsTo(User, { foreignKey: "userId" });
+
 UserGenre.hasMany(User, { foreignKey: "userGenreId" });
 User.belongsTo(UserGenre, { foreignKey: "userGenreId" });
 
 User.belongsTo(City, { foreignKey: "cityId" });
 City.hasMany(User, { foreignKey: "cityId" });
+
+// Complejo favorito del perfil (HU-006)
+User.belongsTo(Cinema, { foreignKey: "favoriteCinemaId", as: "favoriteCinema" });
+Cinema.hasMany(User, { foreignKey: "favoriteCinemaId", as: "favoriteUsers" });
 
 // Refresh tokens (JWT)
 User.hasMany(RefreshToken, { foreignKey: "userId" });
@@ -135,6 +160,10 @@ export {
   User,
   Role,
   Membership,
+  UserMembership,
+  EmailVerificationToken,
+  BonusWallet,
+  NotificationPreference,
   UserGenre,
   RefreshToken,
   MovieGenre,

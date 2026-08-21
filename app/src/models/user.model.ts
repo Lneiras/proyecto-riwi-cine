@@ -5,10 +5,9 @@
  * -----------------
  * Este archivo define el modelo `User` de Sequelize, que representa la tabla `users` en la base de datos.
  *
- * Es la entidad de autenticación del sistema: contiene el hash de la
- * contraseña, rol, membresía, ciudad y género de perfil. Los catálogos
- * referenciados (`roles`, `memberships`, `userGenres`, `cities`) se
- * asocian en `src/models/index.ts`.
+ * Es la entidad de autenticación y perfil personal del sistema: contiene
+ * credenciales, datos personales, contacto, consentimientos y referencias
+ * a los catálogos relacionados con el usuario.
  */
 
 import { DataTypes, Model, Optional } from "sequelize";
@@ -20,67 +19,69 @@ import sequelize from "../config/database";
 export interface UserAttributes {
   id: number;
   name: string;
+  lastName: string | null;
+  documentType: string | null;
+  documentNumber: string | null;
+  birthDate: Date | null;
   email: string;
+  phone: string | null;
   passwordHash: string;
   roleId: number;
   membershipId: number;
   cityId: number | null;
+  favoriteCinemaId: number | null;
   userGenreId: number | null;
+  acceptDataProcessing: boolean;
+  acceptTerms: boolean;
+  acceptCommercialCommunications: boolean;
   emailVerified: boolean;
   accountStatus: string;
   registeredAt: Date;
 }
 
 /**
- * Atributos utilizados para la creación de un nuevo usuario.
- *
- * Se utiliza `Optional` para indicar que `id` no es requerido al momento
- * de la creación (autoincrementable), junto con los campos que tienen
- * valor por defecto en la base de datos.
+ * Los campos agregados por HU-006 quedan opcionales en el tipo de creación
+ * para mantener compatibilidad con los seeds y flujos anteriores. El endpoint
+ * público `/auth/register` sí los valida de acuerdo con la historia de usuario.
  */
 export interface UserCreationAttributes
   extends Optional<
     UserAttributes,
-    "id" | "emailVerified" | "accountStatus" | "registeredAt"
+    | "id"
+    | "lastName"
+    | "documentType"
+    | "documentNumber"
+    | "birthDate"
+    | "phone"
+    | "favoriteCinemaId"
+    | "acceptDataProcessing"
+    | "acceptTerms"
+    | "acceptCommercialCommunications"
+    | "emailVerified"
+    | "accountStatus"
+    | "registeredAt"
   > {}
 
-/**
- * Clase que representa el modelo `User` en Sequelize.
- *
- * Implementa los atributos definidos en `UserAttributes` y `UserCreationAttributes`.
- */
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  /** Identificador único del usuario (clave primaria). */
   public id!: number;
-
-  /** Nombre completo del usuario. */
   public name!: string;
-
-  /** Dirección de correo electrónico única del usuario. */
+  public lastName!: string | null;
+  public documentType!: string | null;
+  public documentNumber!: string | null;
+  public birthDate!: Date | null;
   public email!: string;
-
-  /** Hash (bcrypt) de la contraseña. Nunca se guarda en texto plano. */
+  public phone!: string | null;
   public passwordHash!: string;
-
-  /** FK hacia `roles.id`. */
   public roleId!: number;
-
-  /** FK hacia `memberships.id` (el service asigna 1 por defecto). */
   public membershipId!: number;
-
-  /** FK hacia `cities.id` (opcional). */
   public cityId!: number | null;
-
-  /** FK hacia `userGenres.id` (opcional). */
+  public favoriteCinemaId!: number | null;
   public userGenreId!: number | null;
-
-  /** Indica si el correo fue verificado. */
+  public acceptDataProcessing!: boolean;
+  public acceptTerms!: boolean;
+  public acceptCommercialCommunications!: boolean;
   public emailVerified!: boolean;
-
-  /** Estado de la cuenta: activa, bloqueada, inactiva. */
   public accountStatus!: string;
-
-  /** Fecha de registro. */
   public registeredAt!: Date;
 
   /**
@@ -94,9 +95,6 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   }
 }
 
-/**
- * Inicialización del modelo `User` con la configuración de Sequelize.
- */
 User.init(
   {
     id: {
@@ -108,10 +106,31 @@ User.init(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    lastName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    documentType: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
+    documentNumber: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      unique: true,
+    },
+    birthDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
     email: {
       type: DataTypes.STRING(150),
       unique: true,
       allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
     },
     passwordHash: {
       type: DataTypes.STRING(100),
@@ -141,6 +160,14 @@ User.init(
         key: "id",
       },
     },
+    favoriteCinemaId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "cinemas",
+        key: "id",
+      },
+    },
     userGenreId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -148,6 +175,21 @@ User.init(
         model: "userGenres",
         key: "id",
       },
+    },
+    acceptDataProcessing: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    acceptTerms: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    acceptCommercialCommunications: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     emailVerified: {
       type: DataTypes.BOOLEAN,
