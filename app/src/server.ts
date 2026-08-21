@@ -20,6 +20,8 @@ import movieRoutes from "./routes/movie.routes";
 import healthRoutes from "./routes/health.routes";
 import notificationRoutes from "./routes/notification.routes";
 import { errorHandler } from "./middlewares/errorHandler";
+import seatRoutes from "./routes/seat.routes";
+import reservationRoutes from "./routes/reservation.routes";
 
 import cors from "cors";
 import { corsOptions } from "./config/cors";
@@ -49,6 +51,8 @@ app.use("/api/cities", citiesRoutes);
 app.use("/api/movies", movieDetailsRoutes);
 app.use("/api/v1/movies", movieRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/functions",seatRoutes);
+app.use("/api/v1/reservations",reservationRoutes);
 
 // Health check (HU-001 Escenario 1)
 app.use("/api/v1/health", healthRoutes);

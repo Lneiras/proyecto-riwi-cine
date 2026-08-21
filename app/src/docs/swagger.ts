@@ -23,6 +23,7 @@ import path from "path";
  * `definition`:
  *  - Define la versión de OpenAPI.
  *  - Contiene información básica de la API (título, versión, descripción).
+ * 
  *
  * `apis`:
  *  - Indica la ruta donde se ubican los archivos con anotaciones JSDoc
@@ -42,6 +43,15 @@ const options: swaggerJSDoc.Options = {
         description: "Servidor local",
       },
     ],
+    components: { 
+      securitySchemes: { 
+        bearerAuth: { 
+          type: "http", 
+          scheme: "bearer", 
+          bearerFormat: "JWT", 
+        }, 
+      }, 
+    },
   },
   apis: [
     path.join(__dirname, "../routes/*.ts").replace(/\\/g, "/"),
