@@ -43,6 +43,7 @@ import { seedMemberships } from "./membership.seed";
 import { seedUserGenres } from "./user-genre.seed";
 import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
+import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -65,6 +66,7 @@ async function runSeeders(): Promise<void> {
   // Infraestructura física
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
+  await seedSeats( roomIds, roomSeedData );
 
   // Catálogo de películas y funciones
   const movieIds = await seedMovies(genreIds, statusIds);

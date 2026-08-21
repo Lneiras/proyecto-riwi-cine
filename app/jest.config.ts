@@ -5,11 +5,27 @@ import type { Config } from "jest";
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
-  rootDir: "src",
-  testMatch: ["**/__tests__/**/*.test.ts"],
-  moduleFileExtensions: ["ts", "js", "json", "node"],
+
+  rootDir: ".",
+
+  testMatch: [
+    "<rootDir>/src/tests/**/*.test.ts",
+  ],
+
+  moduleFileExtensions: [
+    "ts",
+    "js",
+    "json",
+    "node",
+  ],
+
   clearMocks: true,
-  coverageDirectory: "../coverage",
+
+  setupFiles: [
+    "<rootDir>/src/tests/setup.ts",
+  ],
+
+  coverageDirectory: "<rootDir>/coverage",
 };
 
 export default config;
