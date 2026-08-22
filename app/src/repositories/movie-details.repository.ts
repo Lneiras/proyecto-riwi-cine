@@ -71,10 +71,6 @@ class MovieRepository {
         });
 
     }
-
-
-
-
 }
 
 export default new MovieRepository();
