@@ -8,6 +8,12 @@ interface ActivationEmailData {
   token: string;
 }
 
+interface PasswordResetEmailData {
+  to: string;
+  name: string;
+  token: string;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -25,15 +31,66 @@ class EmailService {
   async sendActivationEmail(data: ActivationEmailData): Promise<void> {
     const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
       .replace(/\/$/, "");
-    const activationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
+    const activationUrl = `${baseUrl}/users/auth/verify-email?token=${encodeURIComponent(data.token)}`;
 
+    await this.send({
+      to: data.to,
+      subject: "Activa tu cuenta de Multicine",
+      consoleLabel: `✉ Activación HU-006 para ${data.to}`,
+      html: `
+        <p>Hola ${escapeHtml(data.name)},</p>
+        <p>Tu registro en Multicine fue creado correctamente.</p>
+        <p><a href="${activationUrl}">Activa tu cuenta aquí</a>.</p>
+        <p>Este enlace es válido durante 24 horas y solo puede utilizarse una vez.</p>
+      `,
+      debugToken: data.token,
+    });
+  }
+
+  /**
+   * Envía el correo de recuperación de contraseña (HU-007).
+   * El token es de un solo uso y expira en 30 minutos.
+   */
+  async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
+    const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
+      .replace(/\/$/, "");
+    const resetUrl = `${baseUrl}/users/auth/reset-password?token=${encodeURIComponent(data.token)}`;
+
+    await this.send({
+      to: data.to,
+      subject: "Recupera tu contraseña de Multicine",
+      consoleLabel: `✉ Recuperación HU-007 para ${data.to}`,
+      html: `
+        <p>Hola ${escapeHtml(data.name)},</p>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p><a href="${resetUrl}">Restablece tu contraseña aquí</a>.</p>
+        <p>Este enlace es válido durante 30 minutos y solo puede utilizarse una vez. Si no solicitaste este cambio, ignora este mensaje.</p>
+      `,
+      debugToken: data.token,
+    });
+  }
+
+  /**
+   * Envía un correo usando el modo configurado:
+   * - "console": imprime en consola (solo desarrollo).
+   * - "resend": API HTTP de Resend mediante fetch nativo.
+   */
+  private async send(options: {
+    to: string;
+    subject: string;
+    consoleLabel: string;
+    html: string;
+    debugToken?: string;
+  }): Promise<void> {
     const deliveryMode =
       process.env.EMAIL_DELIVERY_MODE ||
       (process.env.NODE_ENV === "production" ? "resend" : "console");
 
     if (deliveryMode === "console" && process.env.NODE_ENV !== "production") {
-      console.log(`✉ Activación HU-006 para ${data.to}: ${activationUrl}`)
-      console.log(`activation token: ${data.token}`);
+      console.log(`${options.consoleLabel}: ${options.subject}`)
+      if (options.debugToken) {
+        console.log(`token: ${options.debugToken}`);
+      }
       return;
     }
 
@@ -56,20 +113,15 @@ class EmailService {
       },
       body: JSON.stringify({
         from,
-        to: [data.to],
-        subject: "Activa tu cuenta de Multicine",
-        html: `
-          <p>Hola ${escapeHtml(data.name)},</p>
-          <p>Tu registro en Multicine fue creado correctamente.</p>
-          <p><a href="${activationUrl}">Activa tu cuenta aquí</a>.</p>
-          <p>Este enlace es válido durante 24 horas y solo puede utilizarse una vez.</p>
-        `,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html,
       }),
     });
 
     if (!response.ok) {
       throw new AppError(
-        "No fue posible enviar el correo de activación.",
+        "No fue posible enviar el correo.",
         502,
         "EMAIL_SEND_FAILED"
       );

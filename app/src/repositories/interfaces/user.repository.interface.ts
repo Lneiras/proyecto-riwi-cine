@@ -56,6 +56,11 @@ export interface IUserRepository {
    */
   revokeRefreshToken(token: string): Promise<void>;
 
+  /**
+   * Revoca todos los refresh tokens activos del usuario (HU-007).
+   */
+  revokeAllRefreshTokens(userId: number): Promise<void>;
+
   update(id: number, data: Partial<UserCreationAttributes>): Promise<User | null>;
 
   delete(id: number): Promise<void>;

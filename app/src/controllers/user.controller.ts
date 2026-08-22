@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import userService from "../services/user.service";
 import { CreateUserDto } from "../dto/create-user.dto";
+import { successResponse } from "../utils/apiResponse";
 
 /**
  * ============================================================================
@@ -77,7 +78,7 @@ export const getUsersbyId = async (req: Request, res: Response): Promise<Respons
 };
 
 /**
- * Autenticación de usuario: valida credenciales y emite tokens JWT.
+ * Autenticación de usuario (HU-007): valida credenciales y emite tokens JWT.
  *
  * @example
  * {
@@ -88,19 +89,21 @@ export const getUsersbyId = async (req: Request, res: Response): Promise<Respons
  * Respuestas:
  * - **200 OK** Retorna { user, accessToken, refreshToken }.
  * - **401 Unauthorized** Credenciales inválidas.
+ * - **403 Forbidden** Correo sin verificar (debe activar su cuenta).
+ * - **423 Locked** Cuenta bloqueada temporalmente por intentos fallidos.
  */
-export const Auth = async (req: Request, res: Response): Promise<Response> => {
+export const Auth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const { email, password } = req.body;
-    const result = await userService.login(email, password);
+    const result = await userService.login(email, password, req.ip, req.headers["user-agent"]);
 
-    if (!result) {
-      return res.status(401).json({ error: "Credenciales inválidas" });
-    }
-
-    return res.status(200).json(result);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    return successResponse(res, result);
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -116,7 +119,11 @@ export const Auth = async (req: Request, res: Response): Promise<Response> => {
  * - **200 OK** Retorna { user, accessToken, refreshToken }.
  * - **401 Unauthorized** Token de refresco inválido o expirado.
  */
-export const refreshTokens = async (req: Request, res: Response): Promise<Response> => {
+export const refreshTokens = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
@@ -124,9 +131,80 @@ export const refreshTokens = async (req: Request, res: Response): Promise<Respon
     }
 
     const result = await userService.refresh(refreshToken);
-    return res.status(200).json(result);
-  } catch (error: any) {
-    return res.status(401).json({ error: error.message });
+    return successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Cierre de sesión (HU-007): revoca el refresh token recibido.
+ *
+ * @example
+ * {
+ *   "refreshToken": "..."
+ * }
+ */
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { refreshToken } = req.body as { refreshToken?: string };
+    await userService.logout(refreshToken, req.ip, req.headers["user-agent"]);
+
+    return successResponse(res, { message: "Sesión cerrada correctamente." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Solicitud de recuperación de contraseña (HU-007).
+ * Responde siempre de forma genérica para no revelar si el correo existe.
+ */
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { email } = req.body as { email?: string };
+    await userService.forgotPassword(email ?? "", req.ip, req.headers["user-agent"]);
+
+    return successResponse(res, {
+      message:
+        "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Restablece la contraseña con un token válido (HU-007).
+ *
+ * @example
+ * {
+ *   "token": "...",
+ *   "newPassword": "NuevaClave#2026"
+ * }
+ */
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { token, newPassword } = req.body as { token?: string; newPassword?: string };
+    await userService.resetPassword(token ?? "", newPassword ?? "", req.ip, req.headers["user-agent"]);
+
+    return successResponse(res, {
+      message: "Tu contraseña ha sido restablecida. Inicia sesión nuevamente.",
+    });
+  } catch (error) {
+    next(error);
   }
 };
 

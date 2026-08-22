@@ -35,6 +35,8 @@ import BonusWallet from "./bonus-wallet.model";
 import NotificationPreference from "./notification-preference.model";
 import UserGenre from "./user-genre.model";
 import RefreshToken from "./refresh-token.model";
+import AccessLog from "./access-log.model";
+import PasswordResetToken from "./password-reset-token.model";
 import MovieGenre from "./movie-genre.model";
 import MovieStatus from "./movie-status.model";
 import Format from "./format.model";
@@ -116,6 +118,14 @@ Cinema.hasMany(User, { foreignKey: "favoriteCinemaId", as: "favoriteUsers" });
 User.hasMany(RefreshToken, { foreignKey: "userId" });
 RefreshToken.belongsTo(User, { foreignKey: "userId" });
 
+// Auditoría de accesos (HU-007)
+User.hasMany(AccessLog, { foreignKey: "userId" });
+AccessLog.belongsTo(User, { foreignKey: "userId" });
+
+// Tokens de recuperación de contraseña (HU-007)
+User.hasMany(PasswordResetToken, { foreignKey: "userId" });
+PasswordResetToken.belongsTo(User, { foreignKey: "userId" });
+
 // Funciones (Showtime): el corazón de HU-003
 Movie.hasMany(Showtime, { foreignKey: "movieId" });
 Showtime.belongsTo(Movie, { foreignKey: "movieId" });
@@ -166,6 +176,8 @@ export {
   NotificationPreference,
   UserGenre,
   RefreshToken,
+  AccessLog,
+  PasswordResetToken,
   MovieGenre,
   MovieStatus,
   Format,

@@ -66,6 +66,17 @@ class UserRepository implements IUserRepository {
     await RefreshToken.update({ revoked: true }, { where: { token } });
   }
 
+  /**
+   * Revoca todos los refresh tokens activos del usuario (HU-007:
+   * invalida sesiones previas al iniciar sesión o tras resetear contraseña).
+   */
+  async revokeAllRefreshTokens(userId: number): Promise<void> {
+    await RefreshToken.update(
+      { revoked: true },
+      { where: { userId, revoked: false } }
+    );
+  }
+
   async update(
     id: number,
     data: Partial<UserCreationAttributes>,
