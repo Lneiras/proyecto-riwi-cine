@@ -43,6 +43,13 @@ router.get("/", authenticate, getProfile);
  *               name:
  *                 type: string
  *                 example: "Laura Gómez"
+ *               lastName:
+ *                 type: string
+ *                 example: Hernández
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: francisco@example.com
  *     responses:
  *       200:
  *         description: Perfil actualizado correctamente

@@ -6,13 +6,17 @@
 
 export interface UpdateProfileDto {
     name?: string; //aqui se indica que el nombre es opcional, ya que el usuario puede no querer actualizarlo
+    lastName?: string;
+    email?: string; // el Email tambien queda como opcional
 }
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
 
 // funcion para validar el DTO de actualización de perfil
 // la funcion recibe un body de tipo unknown, que es el objeto que se recibe en la petición HTTP
 export function validateUpdateProfileDto(body: unknown):{
     valid: boolean;
-    errors: string;  
+    error: string;  
     data: UpdateProfileDto
     // sefine la estructura de la respuesta que devolverá la funcion
     // valid: indica si el DTO es válido o no
@@ -33,26 +37,46 @@ export function validateUpdateProfileDto(body: unknown):{
             // si el campo name no es válido, se retorna un objeto con valid: false y el mensaje de error
             return {
                 valid: false,
-                errors: 'El campo nombre debe ser un texto de al menos 2 caracteres',
+                error: 'El campo nombre debe ser un texto de al menos 2 caracteres',
                 data
             };
             // si el campo name es válido, se asigna al objeto data
         }
         data.name = payload.name.trim();
     }
+
+    if (payload.lastName !== undefined) {
+        if (typeof payload.lastName !== 'string' || payload.lastName.trim().length <2) {
+            return {
+                valid: false,
+                error: 'El campo apellido debe ser un texto de al menos 2 caracteres',
+                data
+            };
+        }
+        data.lastName = payload.lastName.trim();
+    }
+
+
+    if (payload.email !== undefined) {
+        if (typeof payload.email !== "string" || !EMAIL_REGEX.test(payload.email.trim())) {
+                return { valid: false, error: "El campo 'email' debe ser un correo electrónico válido.", data };
+            }
+        data.email = payload.email.trim().toLowerCase();
+    }
+    
     if (Object.keys(data).length === 0) {
         // esto verifica si el objeto data está vacío, es decir, si no se proporcionaron campos válidos para }
         // actualizar, de ser asi, se retorna un objeto con valid: false y el mensaje de error de abajo
         return {
             valid: false,
-            errors: 'No se proporcionaron campos válidos para actualizar',
+            error: 'Debes enviar al menos un campo válido para actualizar',
             data
         };
     }
     // si el objeto data tiene al menos un campo válido, se retorna un objeto con valid: true y los datos validados
     return {
         valid: true,
-        errors: '',
+        error: '',
         data
     };
 }

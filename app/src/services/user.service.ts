@@ -11,6 +11,10 @@ import Membership from "../models/membership.model";
 import { IUserService, AuthResult } from "./interfaces/user.service.interface";
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt";
 import { durationToMs } from "../utils/time";
+import crypto from "crypto";
+import sequelize from "../config/database";
+import EmailVerificationTokenRepository from "../repositories/email-verification-token.repository";
+import EmailService from "./email.service";
 
 /**
  * Servicio de Usuarios
@@ -136,9 +140,59 @@ class UserService implements IUserService {
   }
 
   // esto es lo que permite actualizar el perfil del usuario, recibe el id del usuario
-  // y un objeto con los campos a actualizar, en este caso solo el nombre
-  async updateProfile(userId: number, data: Partial<{ name: string }>): Promise<User> {
-  return await UserRepository.update(userId, data);
+  // y un objeto con los campos a actualizar
+async updateProfile(userId: number, data: Partial<{ name: string; lastName: string; email: string }>): Promise<User> {
+    const updateData: Partial<{ name: string; lastName: string; email: string; emailVerified: boolean }> = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+
+    if (data.lastName !== undefined) {
+      updateData.lastName = data.lastName;
+    }
+    
+    if (data.email !== undefined) {
+      const currentUser = await UserRepository.findById(userId);
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      const emailChanged = currentUser.email.toLowerCase() !== data.email.toLowerCase();
+
+      if (emailChanged) {
+        const existingUser = await UserRepository.findByEmail(data.email);
+        if (existingUser && existingUser.id !== userId) {
+          const error: any = new Error("Email already in use");
+          error.statusCode = 409;
+          throw error;
+        }
+
+        updateData.email = data.email;
+        updateData.emailVerified = false; // RN-034
+
+        // Mismo patrón que AuthService.register: token crudo al usuario,
+        // solo se persiste su hash SHA-256.
+        const rawToken = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await sequelize.transaction(async (transaction) => {
+          await EmailVerificationTokenRepository.create(
+            { userId, tokenHash, expiresAt, usedAt: null },
+            transaction
+          );
+        });
+
+        await EmailService.sendEmailChangeVerification({
+          to: data.email,
+          name: currentUser.name,
+          token: rawToken,
+        });
+      }
+    }
+
+    return await UserRepository.update(userId, updateData);
   }
 }
 

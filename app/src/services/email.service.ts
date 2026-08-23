@@ -8,6 +8,12 @@ interface ActivationEmailData {
   token: string;
 }
 
+interface EmailChangeVerificationData {
+  to: string;
+  name: string;
+  token: string;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -73,6 +79,53 @@ class EmailService {
         502,
         "EMAIL_SEND_FAILED"
       );
+    }
+  }
+
+  /**
+ * HU-008 RN-034: correo de confirmación cuando el usuario cambia su
+ * dirección de correo desde su perfil. Reutiliza la misma
+ * infraestructura de envío (Resend/consola) que sendActivationEmail.
+ */
+  async sendEmailChangeVerification(data: EmailChangeVerificationData): Promise<void> {
+    const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
+      .replace(/\/$/, "");
+    const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
+
+    const deliveryMode =
+      process.env.EMAIL_DELIVERY_MODE ||
+      (process.env.NODE_ENV === "production" ? "resend" : "console");
+
+    if (deliveryMode === "console" && process.env.NODE_ENV !== "production") {
+      console.log(`verification token para ${data.to}: ${verificationUrl}`);
+      return;
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.EMAIL_FROM;
+
+    if (!apiKey || !from) {
+      throw new AppError("El servicio de correo no está configurado.", 500, "EMAIL_NOT_CONFIGURED");
+    }
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [data.to],
+        subject: "Confirma tu nuevo correo en Multicine",
+        html: `
+          <p>Hola ${escapeHtml(data.name)},</p>
+          <p>Solicitaste cambiar el correo asociado a tu cuenta de Multicine.</p>
+          <p><a href="${verificationUrl}">Confirma tu nuevo correo aquí</a>.</p>
+          <p>Este enlace es válido durante 24 horas y solo puede utilizarse una vez. Si no fuiste tú, ignora este mensaje.</p>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new AppError("No fue posible enviar el correo de verificación.", 502, "EMAIL_SEND_FAILED");
     }
   }
 }
