@@ -122,38 +122,36 @@ class MembershipService {
 
 // HU8 parte del QR
 // Usamos el`membershipCode` que HU-006 ya generó y guardó en `userMemberships` al momento del registro.
+
     async getOrCreateQr(userId: number): Promise<MembershipQrResult> {
         let active = await this.getActiveUserMembership(userId);
 
         if (!active.qrCode) {
-            let qrCode = "";
+            let candidate = "";
             for (let attempt = 0; attempt < 5; attempt++) {
-                const candidate = generateQrIdentifier();
-                const repeated = await UserMembershipRepository.findByQrCode(candidate);
+                const generated = generateQrIdentifier();
+                const repeated = await UserMembershipRepository.findByQrCode(generated);
                 if (!repeated) {
-                    qrCode = candidate;
+                    candidate = generated;
                     break;
                 }
             }
 
-            if (!qrCode) {
-                throw new AppError(
-                    "No fue posible generar el código QR de membresía.",
-                    500,
-                    "QR_CODE_GENERATION_FAILED"
-                );
+            if (!candidate) {
+                throw new AppError("No fue posible generar el código QR de membresía", 500, "QR_CODE_GENERATION_FAILED");
             }
 
-            active = await UserMembershipRepository.setQrCode(active.id, qrCode);
+             //  Si otra petición ya lo puso, `updated` viene en false 
+            // y `membership.qrCode` trae el valor que la otra petición ya guardó
+            const result = await UserMembershipRepository.setQrCodeIfMissing(active.id, candidate);
+            active = result.membership;
         }
 
         const qrImage = await generateQrImage(active.qrCode!);
 
-        return {
-            code: active.qrCode!,
-            qrImage,
-        };
+        return { code: active.qrCode!, qrImage };
     }
+
 }
 
 export default new MembershipService();

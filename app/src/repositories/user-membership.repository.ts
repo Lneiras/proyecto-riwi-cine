@@ -47,13 +47,18 @@ class UserMembershipRepository implements IUserMembershipRepository {
     return await UserMembership.findOne({ where: { qrCode }, transaction });
   }
 
-  async setQrCode(id: number, qrCode: string): Promise<UserMembership> {
-    await UserMembership.update({ qrCode }, { where: { id } });
-    const updated = await UserMembership.findByPk(id);
-    if (!updated) {
+  async setQrCodeIfMissing(id: number, qrCode: string): Promise<{ updated: boolean; membership: UserMembership }> {
+    const [affectedCount] = await UserMembership.update(
+      { qrCode },
+      { where: { id, qrCode: null } } // 👈 solo aplica si SIGUE siendo null en este instante
+    );
+
+    const current = await UserMembership.findByPk(id);
+    if (!current) {
       throw new Error("UserMembership not found after update");
     }
-    return updated;
+
+    return { updated: affectedCount > 0, membership: current };
   }
 }
 

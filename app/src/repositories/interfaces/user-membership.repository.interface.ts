@@ -23,6 +23,6 @@ export interface IUserMembershipRepository {
 
   findByQrCode(qrCode: string, transaction?: Transaction): Promise<UserMembership | null>;
 
-  setQrCode(id: number, qrCode: string): Promise<UserMembership>;
+  setQrCodeIfMissing(id: number, qrCode: string): Promise<{ updated: boolean; membership: UserMembership }>;
 
 }

@@ -23,6 +23,14 @@ class EmailVerificationTokenRepository {
       { where: { id }, transaction }
     );
   }
+
+  async invalidateUnusedForUser(userId: number, transaction?: Transaction): Promise<void> {
+    await EmailVerificationToken.update(
+      { usedAt: new Date() },
+      { where: { userId, usedAt: null }, transaction }
+    );
+  }
+
 }
 
 export default new EmailVerificationTokenRepository();

@@ -168,18 +168,18 @@ async updateProfile(userId: number, data: Partial<{ name: string; lastName: stri
           throw error;
         }
 
-        updateData.email = data.email;
-        updateData.emailVerified = false; // RN-034
-
-        // Mismo patrón que AuthService.register: token crudo al usuario,
-        // solo se persiste su hash SHA-256.
+// El correo actual sigue siendo válido y verificado hasta que se confirme el nuevo.
         const rawToken = crypto.randomBytes(32).toString("hex");
         const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         await sequelize.transaction(async (transaction) => {
+          // esto invalida cualquier token de cambio de correo anterior sin usar,
+          // antes de crear el nuevo, dentro de la misma transacción.
+          await EmailVerificationTokenRepository.invalidateUnusedForUser(userId, transaction);
+
           await EmailVerificationTokenRepository.create(
-            { userId, tokenHash, expiresAt, usedAt: null },
+            { userId, tokenHash, newEmail: data.email, expiresAt, usedAt: null },
             transaction
           );
         });
@@ -192,7 +192,7 @@ async updateProfile(userId: number, data: Partial<{ name: string; lastName: stri
       }
     }
 
-    return await UserRepository.update(userId, updateData);
+    return await UserRepository.update(userId, updateData); // updateData ya no incluye email/emailVerified si solo cambió el correo
   }
 }
 

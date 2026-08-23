@@ -192,7 +192,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<Respon
     * errors: Un array con los mensajes de error en caso de que el DTO no sea válido. Si valid es true, suele valer null o undefined
     * data: El objeto con los datos ya sanitizados y limpios, listo para mandarse al userService.updateProfile(userId, data).
     */
-    const { valid, errors: error, data } = validateUpdateProfileDto(req.body);
+    const { valid, error, data } = validateUpdateProfileDto(req.body);
     if (!valid) throw new AppError(error!, 400, "VALIDATION_ERROR");
     // si valid es false, significa que el DTO no pasó la validación, 
     // por lo que se lanza un error con código 400 y el mensaje de error correspondiente
@@ -206,6 +206,9 @@ export const updateProfile = async (req: Request, res: Response): Promise<Respon
     if (error instanceof AppError) throw error;
     if (error.message === "User not found") { // si el error es que el usuario no se encontró, se lanza un error con código 404
       throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
+    }
+    if (error.message === "Email already in use") {
+      throw new AppError("Ese correo ya está en uso por otra cuenta.", 409, "EMAIL_IN_USE");
     }
     throw new AppError(error.message, 500, "INTERNAL_ERROR"); // si ocurre un error diferente a los de arriba, se captura y se lanza un error con código 500
   }
