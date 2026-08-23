@@ -1,27 +1,103 @@
 
 
-import MembershipRepository from "../repositories/membership.repository";
-import { IMembershipService, MembershipBenefits } from "./interfaces/membership.service.interface";
+import { Transaction } from "sequelize";
 import Membership from "../models/membership.model";
+import UserMembership from "../models/user-membership.model";
+import UserRepository from "../repositories/user.repository";
+import UserMembershipRepository from "../repositories/user-membership.repository";
+import { generateMembershipCode } from "../helpers/membership-code";
+import { AppError } from "../utils/apiResponse";
 import { calculateMembershipDiscount, MembershipDiscountInput, MembershipDiscountResult } from "../utils/membershipDiscountCalculator";
-import membershipCodeRepository from "../repositories/membership-code.repository";
-import { generateMembershipCode } from "../utils/membershipCodeGenerator";
 import { generateQrImage } from "../utils/qrCodeGenerator";
-import { MembershipQrResult } from "./interfaces/membership.service.interface";
+import { MembershipBenefits, MembershipQrResult } from "./interfaces/membership.service.interface";
+import { generateQrIdentifier } from "../utils/qrIdentifierGenerator";
 
 
 
-class MembershipService implements IMembershipService {
+export interface MembershipCreationResult {
+    membership: UserMembership;
+    created: boolean;
+}
+
+class MembershipService {
+
+    async createForUser(
+        userId: number,
+        membershipId?: number,
+        transaction?: Transaction
+    ): Promise<MembershipCreationResult> {
+        const existing = await UserMembershipRepository.findActiveByUserId(userId, transaction);
+        if (existing) {
+            return { membership: existing, created: false };
+        }
+
+        let resolvedMembershipId = membershipId;
+
+        if (!resolvedMembershipId) {
+            const user = await UserRepository.findById(userId);
+            if (!user) {
+                throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
+            }
+            resolvedMembershipId = user.membershipId;
+        }
+
+        const membershipType = await Membership.findByPk(resolvedMembershipId, { transaction });
+        if (!membershipType) {
+            throw new AppError("El tipo de membresía no está configurado.", 500, "MEMBERSHIP_NOT_CONFIGURED");
+        }
+
+        let membershipCode = "";
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const candidate = generateMembershipCode();
+            const repeated = await UserMembershipRepository.findByMembershipCode(candidate, transaction);
+            if (!repeated) {
+                membershipCode = candidate;
+                break;
+            }
+        }
+
+        if (!membershipCode) {
+            throw new AppError(
+                "No fue posible generar el código de membresía.",
+                500,
+                "MEMBERSHIP_CODE_GENERATION_FAILED"
+            );
+        }
+
+        const createdMembership = await UserMembershipRepository.create(
+            {
+                userId,
+                membershipId: resolvedMembershipId,
+                membershipCode,
+                startDate: new Date(),
+                endDate: null,
+                status: "activa",
+            },
+            transaction
+        );
+
+        return { membership: createdMembership, created: true };
+    }
+
+// HU8 parte de la consulta de membresía activa
+    private async getActiveUserMembership(userId: number): Promise<UserMembership> {
+        const active = await UserMembershipRepository.findActiveByUserId(userId);
+        if (!active) {
+            throw new Error("Membership not found");
+        }
+        return active;
+    }
+
     async getByUserId(userId: number): Promise<Membership> {
-        const membership = await MembershipRepository.findByUserId(userId);
+        const active = await this.getActiveUserMembership(userId);
+        const membership = await Membership.findByPk(active.membershipId);
         if (!membership) {
-        throw new Error("Membership not found");
+            throw new Error("Membership not found");
         }
         return membership;
     }
 
-    //  esto trae los beneficios BASE del nivel actual.
-
+// HU8 parte de beneficios  
     async getBenefitsByUserId(userId: number): Promise<MembershipBenefits> {
         const membership = await this.getByUserId(userId);
         return {
@@ -32,39 +108,49 @@ class MembershipService implements IMembershipService {
         };
     }
 
+// HU8 parte del cálculo de descuento 
     async calculateDiscount(userId: number, input: MembershipDiscountInput): Promise<MembershipDiscountResult> {
         const membership = await this.getByUserId(userId);
-
         return calculateMembershipDiscount(
-        {
-            ticketDiscountPercent: Number(membership.ticketDiscount),
-            snackDiscountPercent: Number(membership.snackDiscount),
-        },
-        input
+            {
+                ticketDiscountPercent: Number(membership.ticketDiscount),
+                snackDiscountPercent: Number(membership.snackDiscount),
+            },
+            input
         );
     }
 
+// HU8 parte del QR
+// Usamos el`membershipCode` que HU-006 ya generó y guardó en `userMemberships` al momento del registro.
     async getOrCreateQr(userId: number): Promise<MembershipQrResult> {
-        let membershipCode = await membershipCodeRepository.findByUserId(userId);
+        let active = await this.getActiveUserMembership(userId);
 
-        if (!membershipCode) {
-            // Reintento simple ante una colisión de `code` extremadamente
-            // improbable (8 caracteres hex = 4,294,967,296 combinaciones).
-            let attempts = 0;
-            while (!membershipCode && attempts < 3) {
-                try {
-                    membershipCode = await membershipCodeRepository.create(userId, generateMembershipCode());
-                } catch (err: any) {
-                    attempts++;
-                    if (attempts >= 3) throw err;
+        if (!active.qrCode) {
+            let qrCode = "";
+            for (let attempt = 0; attempt < 5; attempt++) {
+                const candidate = generateQrIdentifier();
+                const repeated = await UserMembershipRepository.findByQrCode(candidate);
+                if (!repeated) {
+                    qrCode = candidate;
+                    break;
                 }
             }
+
+            if (!qrCode) {
+                throw new AppError(
+                    "No fue posible generar el código QR de membresía.",
+                    500,
+                    "QR_CODE_GENERATION_FAILED"
+                );
+            }
+
+            active = await UserMembershipRepository.setQrCode(active.id, qrCode);
         }
 
-        const qrImage = await generateQrImage(membershipCode!.code);
+        const qrImage = await generateQrImage(active.qrCode!);
 
         return {
-            code: membershipCode!.code,
+            code: active.qrCode!,
             qrImage,
         };
     }

@@ -1,4 +1,3 @@
-// app/src/server.ts
 
 /**
  * Se encarga únicamente de configurar la aplicación Express: middlewares, rutas, swagger, etc.
@@ -11,6 +10,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
 import countryRoutes from "./routes/country.routes";
 import userRoutes from "./routes/user.routes";
+import authRoutes from "./routes/auth.routes";
+import membershipRoutes from "./routes/membership.routes";
 import departmentRoutes from "./routes/department.routes";
 import citiesRoutes from "./routes/cities.routes";
 import movieDetailsRoutes from "./routes/movie-details.routes";
@@ -19,7 +20,9 @@ import healthRoutes from "./routes/health.routes";
 import notificationRoutes from "./routes/notification.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import profileRoutes from "./routes/profile.routes";
-import membershipRoutes from "./routes/membership.routes";
+import seatRoutes from "./routes/seat.routes";
+import reservationRoutes from "./routes/reservation.routes";
+
 import cors from "cors";
 import { corsOptions } from "./config/cors";
 import helmet from "helmet";
@@ -39,6 +42,8 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 
 // Rutas
+app.use("/auth", authRoutes);
+app.use("/membership", membershipRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/countries", countryRoutes);
 app.use("/api/departments", departmentRoutes);
@@ -48,6 +53,8 @@ app.use("/api/v1/movies", movieRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/membership", membershipRoutes);
+app.use("/api/v1/functions",seatRoutes);
+app.use("/api/v1/reservations",reservationRoutes);
 
 // Health check (HU-001 Escenario 1)
 app.use("/api/v1/health", healthRoutes);

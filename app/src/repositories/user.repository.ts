@@ -2,40 +2,40 @@
 
 import User, { UserCreationAttributes } from "../models/user.model";
 import RefreshToken from "../models/refresh-token.model";
+import UserMembership from "../models/user-membership.model";
+import Membership from "../models/membership.model";
 import { IUserRepository } from "./interfaces/user.repository.interface";
 import CityRepository from "./cities.repository";
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 
 /**
  * Repositorio de Usuarios
  * -----------------------
  * Implementa el patrón Repository para encapsular todas las operaciones
  * de persistencia relacionadas con la entidad User.
- *
- * Esta clase es la única responsable de interactuar con Sequelize.
  */
-
 class UserRepository implements IUserRepository {
-  /**
-   * Crea un nuevo usuario.
-   */
-  async create(data: UserCreationAttributes): Promise<User> {
-    return await User.create(data);
+  async create(data: UserCreationAttributes, transaction?: Transaction): Promise<User> {
+    return await User.create(data, { transaction });
   }
 
-  /**
-   * Obtiene todos los usuarios.
-   */
   async findAll(): Promise<User[]> {
-    return await User.findAll();
+    return await User.findAll({
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async findById(id: number): Promise<User | null> {
-    return await User.findByPk(id);
+    return await User.findByPk(id, {
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await User.findOne({ where: { email } });
+    return await User.findOne({
+      where: { email },
+      include: [{ model: UserMembership, include: [{ model: Membership }] }],
+    });
   }
 
   async changeUserLocation(userId: number, cityId: number): Promise<User | null> {
@@ -66,10 +66,14 @@ class UserRepository implements IUserRepository {
     await RefreshToken.update({ revoked: true }, { where: { token } });
   }
 
-  async update(id: number, data: Partial<UserCreationAttributes>): Promise<User> {
-    const user = await this.findById(id);
+  async update(
+    id: number,
+    data: Partial<UserCreationAttributes>,
+    transaction?: Transaction
+  ): Promise<User> {
+    const user = await User.findByPk(id, { transaction });
     if (!user) throw new Error("User not found");
-    return await user.update(data);
+    return await user.update(data, { transaction });
   }
 
   async delete(id: number): Promise<void> {

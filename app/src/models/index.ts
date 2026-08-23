@@ -1,4 +1,3 @@
-// app/src/models/index.ts
 
 /**
  * Índice central de modelos
@@ -29,6 +28,10 @@ import City from "./cities.model";
 import User from "./user.model";
 import Role from "./role.model";
 import Membership from "./membership.model";
+import UserMembership from "./user-membership.model";
+import EmailVerificationToken from "./email-verification-token.model";
+import BonusWallet from "./bonus-wallet.model";
+import NotificationPreference from "./notification-preference.model";
 import UserGenre from "./user-genre.model";
 import RefreshToken from "./refresh-token.model";
 import MovieGenre from "./movie-genre.model";
@@ -40,7 +43,9 @@ import Room from "./room.model";
 import Movie from "./movie.model";
 import Showtime from "./showtime.model";
 import PremiereNotification from "./premiere-notification.model";
-import MembershipCode from "./membership-code.model";
+import Seat from "./seat.model";
+import SeatLock from "./seat-lock.model";
+import ReservationEntry from "./reservation-entry.model";
 
 /**
  * Asociaciones entre modelos
@@ -79,11 +84,32 @@ User.belongsTo(Role, { foreignKey: "roleId" });
 Membership.hasMany(User, { foreignKey: "membershipId" });
 User.belongsTo(Membership, { foreignKey: "membershipId" });
 
+// Membresías individuales del usuario (HU-006): historial con ID propio
+Membership.hasMany(UserMembership, { foreignKey: "membershipId" });
+UserMembership.belongsTo(Membership, { foreignKey: "membershipId" });
+
+User.hasMany(UserMembership, { foreignKey: "userId" });
+UserMembership.belongsTo(User, { foreignKey: "userId" });
+
+// Recursos creados automáticamente durante el registro (HU-006)
+User.hasMany(EmailVerificationToken, { foreignKey: "userId" });
+EmailVerificationToken.belongsTo(User, { foreignKey: "userId" });
+
+User.hasOne(BonusWallet, { foreignKey: "userId" });
+BonusWallet.belongsTo(User, { foreignKey: "userId" });
+
+User.hasOne(NotificationPreference, { foreignKey: "userId" });
+NotificationPreference.belongsTo(User, { foreignKey: "userId" });
+
 UserGenre.hasMany(User, { foreignKey: "userGenreId" });
 User.belongsTo(UserGenre, { foreignKey: "userGenreId" });
 
 User.belongsTo(City, { foreignKey: "cityId" });
 City.hasMany(User, { foreignKey: "cityId" });
+
+// Complejo favorito del perfil (HU-006)
+User.belongsTo(Cinema, { foreignKey: "favoriteCinemaId", as: "favoriteCinema" });
+Cinema.hasMany(User, { foreignKey: "favoriteCinemaId", as: "favoriteUsers" });
 
 // Refresh tokens (JWT)
 User.hasMany(RefreshToken, { foreignKey: "userId" });
@@ -95,6 +121,23 @@ Showtime.belongsTo(Movie, { foreignKey: "movieId" });
 
 Room.hasMany(Showtime, { foreignKey: "roomId" });
 Showtime.belongsTo(Room, { foreignKey: "roomId" });
+
+Room.hasMany(Seat, { foreignKey: "roomId" });
+Seat.belongsTo(Room, { foreignKey: "roomId",});
+
+//relaciones sillas bloqueadas perteneces a ciertas funciones
+Showtime.hasMany(SeatLock, { foreignKey: "showtimeId",});
+SeatLock.belongsTo(Showtime, { foreignKey: "showtimeId",});
+
+Seat.hasMany(SeatLock, { foreignKey: "seatId",});
+SeatLock.belongsTo(Seat, { foreignKey: "seatId",});
+
+//
+Showtime.hasMany(ReservationEntry, { foreignKey: "showtimeId",});
+ReservationEntry.belongsTo(Showtime, { foreignKey: "showtimeId",});
+
+Seat.hasMany(ReservationEntry, { foreignKey: "seatId",});
+ReservationEntry.belongsTo(Seat, { foreignKey: "seatId" });
 
 Format.hasMany(Showtime, { foreignKey: "formatId" });
 Showtime.belongsTo(Format, { foreignKey: "formatId" });
@@ -109,9 +152,6 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
-User.hasOne(MembershipCode, { foreignKey: "userId" });
-MembershipCode.belongsTo(User, { foreignKey: "userId" });
-
 
 export {
   Country,
@@ -120,6 +160,10 @@ export {
   User,
   Role,
   Membership,
+  UserMembership,
+  EmailVerificationToken,
+  BonusWallet,
+  NotificationPreference,
   UserGenre,
   RefreshToken,
   MovieGenre,
@@ -131,5 +175,7 @@ export {
   Movie,
   Showtime,
   PremiereNotification,
-  MembershipCode,
+  Seat,
+  SeatLock,
+  ReservationEntry,
 };

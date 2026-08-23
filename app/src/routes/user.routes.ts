@@ -18,6 +18,7 @@
 
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth";
+import { loginRateLimiter } from "../middlewares/rateLimit";
 import {
   createUser,
   getUsers,
@@ -29,39 +30,7 @@ import {
 
 const router = Router();
 
-/**
- * @swagger
- * /api/users:
- *   post:
- *     summary: Crear un nuevo usuario
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 example: "John Doe"
- *               email:
- *                 type: string
- *                 example: "john.doe@example.com"
- *               password:
- *                 type: string
- *                 example: "password123"
- *     responses:
- *       201:
- *         description: Usuario creado exitosamente
- *       500:
- *         description: Error interno del servidor
- */
-router.post("/", createUser);
+
 
 /**
  * @swagger
@@ -107,7 +76,7 @@ router.get("/", getUsers);
  *       500:
  *         description: Error interno del servidor
  */
-router.post("/auth", Auth);
+router.post("/auth", loginRateLimiter, Auth);
 
 /**
  * @swagger
