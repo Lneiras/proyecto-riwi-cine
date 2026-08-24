@@ -3,6 +3,8 @@
 import UserMembership, {
   UserMembershipCreationAttributes,
 } from "../../models/user-membership.model";
+import { Transaction } from "sequelize";
+
 
 /**
  * Contrato del Repositorio de Membresías de Usuario (HU-006).
@@ -18,4 +20,9 @@ export interface IUserMembershipRepository {
    * Historial de membresías de un usuario.
    */
   findByUserId(userId: number): Promise<UserMembership[]>;
+
+  findByQrCode(qrCode: string, transaction?: Transaction): Promise<UserMembership | null>;
+
+  setQrCodeIfMissing(id: number, qrCode: string): Promise<{ updated: boolean; membership: UserMembership }>;
+
 }

@@ -1,4 +1,3 @@
-// app/src/models/index.ts
 
 /**
  * Índice central de modelos
@@ -162,6 +161,7 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
+
 
 export {
   Country,

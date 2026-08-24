@@ -187,9 +187,18 @@ class AuthService implements IAuthService {
     }
 
     await sequelize.transaction(async (transaction) => {
+      const updateData: Partial<{ emailVerified: boolean; accountStatus: string; email: string }> = {
+        emailVerified: true,
+        accountStatus: "activa",
+      };
+
+      if (storedToken.newEmail) {
+        updateData.email = storedToken.newEmail;
+      }
+
       await UserRepository.update(
         storedToken.userId,
-        { emailVerified: true, accountStatus: "activa" },
+        updateData,
         transaction
       );
       await EmailVerificationTokenRepository.markAsUsed(storedToken.id, transaction);
