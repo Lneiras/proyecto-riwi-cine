@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import userService from "../services/user.service";
 import { CreateUserDto } from "../dto/create-user.dto";
-import { successResponse } from "../utils/apiResponse";
 import { validateUpdateProfileDto } from "../dto/update-profile.dto";
 import { successResponse, AppError } from "../utils/apiResponse";
 

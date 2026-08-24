@@ -63,5 +63,7 @@ export interface IUserRepository {
 
   update(id: number, data: Partial<UserCreationAttributes>): Promise<User | null>;
 
+  incrementFailedAttempts(id: number): Promise<number>;
+
   delete(id: number): Promise<void>;
 }

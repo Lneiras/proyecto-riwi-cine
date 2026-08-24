@@ -16,10 +16,8 @@ import { IUserService, AuthResult } from "./interfaces/user.service.interface";
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt";
 import { durationToMs } from "../utils/time";
 import { AppError } from "../utils/apiResponse";
-import crypto from "crypto";
 import sequelize from "../config/database";
 import EmailVerificationTokenRepository from "../repositories/email-verification-token.repository";
-import EmailService from "./email.service";
 
 /**
  * Reglas de seguridad HU-007.
@@ -27,8 +25,8 @@ import EmailService from "./email.service";
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000; // 30 minutos
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
-
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
 
 /**
  * Servicio de Usuarios
@@ -75,8 +73,11 @@ class UserService implements IUserService {
     const clientRole = await Role.findOne({ where: { name: "Cliente" } });
     if (!clientRole) throw new Error("El rol Cliente no está configurado");
 
-    const bronzeMembership = await Membership.findOne({ where: { name: "Bronce" } });
-    if (!bronzeMembership) throw new Error("La membresía Bronce no está configurada");
+    const bronzeMembership = await Membership.findOne({
+      where: { name: "Bronce" },
+    });
+    if (!bronzeMembership)
+      throw new Error("La membresía Bronce no está configurada");
 
     const roleId = clientRole.id;
     const membershipId = bronzeMembership.id;
@@ -105,7 +106,10 @@ class UserService implements IUserService {
     const user = await UserRepository.findById(userId);
     if (!user) throw new Error("Usuario no encontrado");
 
-    return await UserRepository.update(userId, { emailVerified: true, accountStatus: "activa" });
+    return await UserRepository.update(userId, {
+      emailVerified: true,
+      accountStatus: "activa",
+    });
   }
 
   async findAll(): Promise<User[]> {
@@ -132,7 +136,11 @@ class UserService implements IUserService {
     const ctx: LoginContext = { ip, userAgent };
 
     if (typeof email !== "string" || typeof password !== "string") {
-      throw new AppError("Correo y contraseña son requeridos.", 400, "VALIDATION_ERROR");
+      throw new AppError(
+        "Correo y contraseña son requeridos.",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     const user = await UserRepository.findByEmail(email.trim().toLowerCase());
@@ -144,7 +152,10 @@ class UserService implements IUserService {
 
     // Escenario 2: cuenta bloqueada temporalmente.
     if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
-      const minutesLeft = Math.max(1, Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000));
+      const minutesLeft = Math.max(
+        1,
+        Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000)
+      );
       await this.logAccess("login_blocked", user.id, ctx);
       throw new AppError(
         `Tu cuenta está bloqueada temporalmente. Intenta nuevamente en ${minutesLeft} minuto(s).`,
@@ -156,10 +167,9 @@ class UserService implements IUserService {
     const passwordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordValid) {
-      const attempts = user.failedLoginAttempts + 1;
+      const attempts = await UserRepository.incrementFailedAttempts(user.id);
 
       if (attempts >= MAX_FAILED_ATTEMPTS) {
-        // Quinto intento fallido: bloqueo temporal de la cuenta.
         const lockedUntil = new Date(Date.now() + LOCK_DURATION_MS);
         await UserRepository.update(user.id, {
           failedLoginAttempts: 0,
@@ -173,7 +183,6 @@ class UserService implements IUserService {
         );
       }
 
-      await UserRepository.update(user.id, { failedLoginAttempts: attempts });
       await this.logAccess("login_failed", user.id, ctx);
       const remaining = MAX_FAILED_ATTEMPTS - attempts;
       throw new AppError(
@@ -213,9 +222,19 @@ class UserService implements IUserService {
   }
 
   async refresh(refreshToken: string): Promise<AuthResult> {
-    const payload = verifyToken(refreshToken);
+    let payload: ReturnType<typeof verifyToken>;
+    try {
+      payload = verifyToken(refreshToken);
+    } catch {
+      throw new AppError("Token de refresco inválido o expirado.", 401, "INVALID_REFRESH_TOKEN");
+    }
+
     if (typeof payload.sub !== "number") {
-      throw new AppError("Token de refresco inválido.", 401, "INVALID_REFRESH_TOKEN");
+      throw new AppError(
+        "Token de refresco inválido.",
+        401,
+        "INVALID_REFRESH_TOKEN"
+      );
     }
 
     const stored = await UserRepository.findValidRefreshToken(refreshToken);
@@ -233,7 +252,11 @@ class UserService implements IUserService {
     }
 
     if (!user.emailVerified || user.accountStatus !== "activa") {
-      throw new AppError("La cuenta aún no está activa.", 403, "ACCOUNT_NOT_ACTIVE");
+      throw new AppError(
+        "La cuenta aún no está activa.",
+        403,
+        "ACCOUNT_NOT_ACTIVE"
+      );
     }
 
     // Rotación: se revoca el token usado y se emite uno nuevo
@@ -272,9 +295,17 @@ class UserService implements IUserService {
    * Genera un token de un solo uso (30 min) y lo envía por correo.
    * Responde siempre de forma genérica para no revelar si el correo existe.
    */
-  async forgotPassword(email: string, ip?: string, userAgent?: string): Promise<void> {
+  async forgotPassword(
+    email: string,
+    ip?: string,
+    userAgent?: string
+  ): Promise<void> {
     if (typeof email !== "string" || !email.trim()) {
-      throw new AppError("El correo electrónico es requerido.", 400, "VALIDATION_ERROR");
+      throw new AppError(
+        "El correo electrónico es requerido.",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     const ctx: LoginContext = { ip, userAgent };
@@ -286,10 +317,17 @@ class UserService implements IUserService {
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
     const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
 
-    await PasswordResetTokenRepository.create({ userId: user.id, tokenHash, expiresAt });
+    await PasswordResetTokenRepository.create({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
     await EmailService.sendPasswordResetEmail({
       to: user.email,
       name: user.name,
@@ -309,13 +347,14 @@ class UserService implements IUserService {
     userAgent?: string
   ): Promise<void> {
     if (typeof token !== "string" || !token.trim()) {
-      throw new AppError("El token de recuperación es requerido.", 400, "TOKEN_REQUIRED");
+      throw new AppError(
+        "El token de recuperación es requerido.",
+        400,
+        "TOKEN_REQUIRED"
+      );
     }
 
-    if (
-      typeof newPassword !== "string" ||
-      !PASSWORD_REGEX.test(newPassword)
-    ) {
+    if (typeof newPassword !== "string" || !PASSWORD_REGEX.test(newPassword)) {
       throw new AppError(
         "La contraseña debe tener mínimo 10 caracteres e incluir mayúscula, minúscula, número y carácter especial.",
         400,
@@ -324,19 +363,34 @@ class UserService implements IUserService {
     }
 
     const ctx: LoginContext = { ip, userAgent };
-    const tokenHash = crypto.createHash("sha256").update(token.trim()).digest("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(token.trim())
+      .digest("hex");
     const stored = await PasswordResetTokenRepository.findByHash(tokenHash);
 
     if (!stored) {
-      throw new AppError("Token de recuperación inválido.", 400, "TOKEN_INVALID");
+      throw new AppError(
+        "Token de recuperación inválido.",
+        400,
+        "TOKEN_INVALID"
+      );
     }
 
     if (stored.usedAt) {
-      throw new AppError("El token de recuperación ya fue utilizado.", 400, "TOKEN_ALREADY_USED");
+      throw new AppError(
+        "El token de recuperación ya fue utilizado.",
+        400,
+        "TOKEN_ALREADY_USED"
+      );
     }
 
     if (stored.expiresAt.getTime() <= Date.now()) {
-      throw new AppError("El token de recuperación expiró.", 400, "TOKEN_EXPIRED");
+      throw new AppError(
+        "El token de recuperación expiró.",
+        400,
+        "TOKEN_EXPIRED"
+      );
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -352,7 +406,10 @@ class UserService implements IUserService {
     await this.logAccess("reset_password", stored.userId, ctx);
   }
 
-  async changeUserLocation(userId: number, location: string): Promise<User | null> {
+  async changeUserLocation(
+    userId: number,
+    location: string
+  ): Promise<User | null> {
     const city = await CityRepository.findByName(location);
     if (!city) throw new Error("City not found");
 
@@ -365,8 +422,16 @@ class UserService implements IUserService {
 
   // esto es lo que permite actualizar el perfil del usuario, recibe el id del usuario
   // y un objeto con los campos a actualizar
-async updateProfile(userId: number, data: Partial<{ name: string; lastName: string; email: string }>): Promise<User> {
-    const updateData: Partial<{ name: string; lastName: string; email: string; emailVerified: boolean }> = {};
+  async updateProfile(
+    userId: number,
+    data: Partial<{ name: string; lastName: string; email: string }>
+  ): Promise<User> {
+    const updateData: Partial<{
+      name: string;
+      lastName: string;
+      email: string;
+      emailVerified: boolean;
+    }> = {};
 
     if (data.name !== undefined) {
       updateData.name = data.name;
@@ -375,14 +440,15 @@ async updateProfile(userId: number, data: Partial<{ name: string; lastName: stri
     if (data.lastName !== undefined) {
       updateData.lastName = data.lastName;
     }
-    
+
     if (data.email !== undefined) {
       const currentUser = await UserRepository.findById(userId);
       if (!currentUser) {
         throw new Error("User not found");
       }
 
-      const emailChanged = currentUser.email.toLowerCase() !== data.email.toLowerCase();
+      const emailChanged =
+        currentUser.email.toLowerCase() !== data.email.toLowerCase();
 
       if (emailChanged) {
         const existingUser = await UserRepository.findByEmail(data.email);
@@ -392,18 +458,30 @@ async updateProfile(userId: number, data: Partial<{ name: string; lastName: stri
           throw error;
         }
 
-// El correo actual sigue siendo válido y verificado hasta que se confirme el nuevo.
+        // El correo actual sigue siendo válido y verificado hasta que se confirme el nuevo.
         const rawToken = crypto.randomBytes(32).toString("hex");
-        const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+        const tokenHash = crypto
+          .createHash("sha256")
+          .update(rawToken)
+          .digest("hex");
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         await sequelize.transaction(async (transaction) => {
           // esto invalida cualquier token de cambio de correo anterior sin usar,
           // antes de crear el nuevo, dentro de la misma transacción.
-          await EmailVerificationTokenRepository.invalidateUnusedForUser(userId, transaction);
+          await EmailVerificationTokenRepository.invalidateUnusedForUser(
+            userId,
+            transaction
+          );
 
           await EmailVerificationTokenRepository.create(
-            { userId, tokenHash, newEmail: data.email, expiresAt, usedAt: null },
+            {
+              userId,
+              tokenHash,
+              newEmail: data.email,
+              expiresAt,
+              usedAt: null,
+            },
             transaction
           );
         });

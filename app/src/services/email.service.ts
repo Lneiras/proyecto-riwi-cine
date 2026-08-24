@@ -8,12 +8,13 @@ interface ActivationEmailData {
   token: string;
 }
 
-interface PasswordResetEmailData {
+interface EmailChangeVerificationData {
   to: string;
   name: string;
   token: string;
 }
-interface EmailChangeVerificationData {
+
+interface PasswordResetEmailData {
   to: string;
   name: string;
   token: string;
