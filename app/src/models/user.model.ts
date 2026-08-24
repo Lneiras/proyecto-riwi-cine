@@ -37,6 +37,10 @@ export interface UserAttributes {
   emailVerified: boolean;
   accountStatus: string;
   registeredAt: Date;
+  /** Intentos fallidos consecutivos de login (HU-007). */
+  failedLoginAttempts: number;
+  /** Fecha hasta la cual la cuenta está bloqueada por intentos fallidos (HU-007). */
+  lockedUntil: Date | null;
 }
 
 /**
@@ -60,6 +64,8 @@ export interface UserCreationAttributes
     | "emailVerified"
     | "accountStatus"
     | "registeredAt"
+    | "failedLoginAttempts"
+    | "lockedUntil"
   > {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -83,6 +89,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public emailVerified!: boolean;
   public accountStatus!: string;
   public registeredAt!: Date;
+  public failedLoginAttempts!: number;
+  public lockedUntil!: Date | null;
 
   /**
    * Serialización segura del usuario: excluye `passwordHash` de cualquier
@@ -202,6 +210,16 @@ User.init(
     registeredAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+    },
+    failedLoginAttempts: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    lockedUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

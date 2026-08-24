@@ -18,9 +18,22 @@ export interface IUserService {
 
   findAll(): Promise<User[]>;
 
-  login(email: string, password: string): Promise<AuthResult | null>;
+  /**
+   * Autentica credenciales y emite tokens (HU-007).
+   * Lanza AppError ante credenciales inválidas, cuenta bloqueada o correo sin verificar.
+   */
+  login(email: string, password: string, ip?: string, userAgent?: string): Promise<AuthResult>;
 
   refresh(refreshToken: string): Promise<AuthResult>;
+
+  /** Cierra sesión revocando el refresh token recibido (HU-007). */
+  logout(refreshToken: string | undefined, ip?: string, userAgent?: string): Promise<void>;
+
+  /** Inicia el flujo de recuperación de contraseña enviando un token por correo (HU-007). */
+  forgotPassword(email: string, ip?: string, userAgent?: string): Promise<void>;
+
+  /** Restablece la contraseña usando un token válido de recuperación (HU-007). */
+  resetPassword(token: string, newPassword: string, ip?: string, userAgent?: string): Promise<void>;
 
   changeUserLocation(userId: number, location: string): Promise<User | null>;
 

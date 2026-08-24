@@ -66,6 +66,17 @@ class UserRepository implements IUserRepository {
     await RefreshToken.update({ revoked: true }, { where: { token } });
   }
 
+  /**
+   * Revoca todos los refresh tokens activos del usuario (HU-007:
+   * invalida sesiones previas al iniciar sesión o tras resetear contraseña).
+   */
+  async revokeAllRefreshTokens(userId: number): Promise<void> {
+    await RefreshToken.update(
+      { revoked: true },
+      { where: { userId, revoked: false } }
+    );
+  }
+
   async update(
     id: number,
     data: Partial<UserCreationAttributes>,
@@ -74,6 +85,17 @@ class UserRepository implements IUserRepository {
     const user = await User.findByPk(id, { transaction });
     if (!user) throw new Error("User not found");
     return await user.update(data, { transaction });
+  }
+    /**
+   * Incrementa failedLoginAttempts de forma atómica a nivel de base de
+   * datos (UPDATE ... SET col = col + 1), evitando que dos intentos de
+   * login concurrentes se pisen entre sí.
+   */
+  async incrementFailedAttempts(id: number): Promise<number> {
+    await User.increment("failedLoginAttempts", { by: 1, where: { id } });
+    const user = await User.findByPk(id);
+    if (!user) throw new Error("User not found");
+    return user.failedLoginAttempts;
   }
 
   async delete(id: number): Promise<void> {
