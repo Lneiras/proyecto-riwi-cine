@@ -1,4 +1,3 @@
-// app/src/server.ts
 
 /**
  * Se encarga únicamente de configurar la aplicación Express: middlewares, rutas, swagger, etc.
@@ -20,6 +19,7 @@ import movieRoutes from "./routes/movie.routes";
 import healthRoutes from "./routes/health.routes";
 import notificationRoutes from "./routes/notification.routes";
 import { errorHandler } from "./middlewares/errorHandler";
+import profileRoutes from "./routes/profile.routes";
 import seatRoutes from "./routes/seat.routes";
 import reservationRoutes from "./routes/reservation.routes";
 import showtimeRoutes from "./routes/showtime.routes";
@@ -52,8 +52,10 @@ app.use("/api/cities", citiesRoutes);
 app.use("/api/movies", movieDetailsRoutes);
 app.use("/api/v1/movies", movieRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
-app.use("/api/v1/functions", seatRoutes);
-app.use("/api/v1/reservations", reservationRoutes);
+app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1/membership", membershipRoutes);
+app.use("/api/v1/functions",seatRoutes);
+app.use("/api/v1/reservations",reservationRoutes);
 app.use("/api/functions", showtimeRoutes);
 
 // Health check (HU-001 Escenario 1)

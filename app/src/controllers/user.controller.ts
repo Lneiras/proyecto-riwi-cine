@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import userService from "../services/user.service";
 import { CreateUserDto } from "../dto/create-user.dto";
+import { validateUpdateProfileDto } from "../dto/update-profile.dto";
+import { successResponse, AppError } from "../utils/apiResponse";
 
 /**
  * ============================================================================
@@ -151,5 +153,63 @@ export const changeUserLocation = async (req: Request, res: Response): Promise<R
     return res.status(200).json(updatedUser);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
+  }
+};
+
+
+// esto trae el perfil del usuario autenticado, requiere que el usuario esté logueado y tenga un token válido
+export const getProfile = async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const userId = req.userId; // con esto traemos el id del usuario autenticado, que se encuentra en el token JWT
+    if (!userId) throw new AppError("Debes tener una sesión activa.", 401, "UNAUTHORIZED");
+    // si no hay in userId, significa que el usuario no está autenticado, por lo que se lanza un error con código 401
+
+    const user = await userService.findById(userId); // con esto traemos el usuario de la base de datos, usando el id del token
+    if (!user) throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
+    // si no se encuentra el usuario en la base de datos, significa que el usuario no existe, por lo que se lanza un error con código 404
+
+    return successResponse(res, user, 200); // si todo sale bien, se retorna el usuario
+  } catch (error: any) {  // con esto si ocurre un error diferente a los de arriba, se captura y se lanza un error con código 500
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message, 500, "INTERNAL_ERROR");
+  }
+};
+
+// esto permite actualizar el perfil del usuario autenticado, 
+// requiere que el usuario esté logueado y tenga un token válido
+export const updateProfile = async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const userId = req.userId;  // con esto traemos el id del usuario autenticado, que se encuentra en el token JWT
+    if (!userId) throw new AppError("Debes tener una sesión activa.", 401, "UNAUTHORIZED");
+    // si no hay in userId, significa que el usuario no está autenticado, por lo que se lanza un error con código 401
+
+
+    /* esto { valid, errors, data } se llama desestructuración de objetos 
+    * la función validateUpdateProfileDto devuelve un solo objeto con varias propiedades adentro, 
+    * y la desestructuración las "desempaqueta" en variables independientes en una sola línea.
+    * 
+    * valid: Un booleano (true o false) que indica si el cuerpo de la petición (req.body) pasó con éxito las reglas de validación.
+    * errors: Un array con los mensajes de error en caso de que el DTO no sea válido. Si valid es true, suele valer null o undefined
+    * data: El objeto con los datos ya sanitizados y limpios, listo para mandarse al userService.updateProfile(userId, data).
+    */
+    const { valid, error, data } = validateUpdateProfileDto(req.body);
+    if (!valid) throw new AppError(error!, 400, "VALIDATION_ERROR");
+    // si valid es false, significa que el DTO no pasó la validación, 
+    // por lo que se lanza un error con código 400 y el mensaje de error correspondiente
+
+
+    const updatedUser = await userService.updateProfile(userId, data);
+    // con esto se llama al servicio de usuario para actualizar el perfil del usuario autenticado,
+    // pasando el id del usuario y los datos validados del DTO (data) que se quieren actualizar
+    return successResponse(res, updatedUser, 200); // si todo sale bien, se retorna el usuario actualizado
+  } catch (error: any) {
+    if (error instanceof AppError) throw error;
+    if (error.message === "User not found") { // si el error es que el usuario no se encontró, se lanza un error con código 404
+      throw new AppError("Usuario no encontrado.", 404, "USER_NOT_FOUND");
+    }
+    if (error.message === "Email already in use") {
+      throw new AppError("Ese correo ya está en uso por otra cuenta.", 409, "EMAIL_IN_USE");
+    }
+    throw new AppError(error.message, 500, "INTERNAL_ERROR"); // si ocurre un error diferente a los de arriba, se captura y se lanza un error con código 500
   }
 };

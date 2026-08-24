@@ -11,6 +11,10 @@ import Membership from "../models/membership.model";
 import { IUserService, AuthResult } from "./interfaces/user.service.interface";
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt";
 import { durationToMs } from "../utils/time";
+import crypto from "crypto";
+import sequelize from "../config/database";
+import EmailVerificationTokenRepository from "../repositories/email-verification-token.repository";
+import EmailService from "./email.service";
 
 /**
  * Servicio de Usuarios
@@ -133,6 +137,62 @@ class UserService implements IUserService {
 
   async findById(id: number): Promise<User | null> {
     return await UserRepository.findById(id);
+  }
+
+  // esto es lo que permite actualizar el perfil del usuario, recibe el id del usuario
+  // y un objeto con los campos a actualizar
+async updateProfile(userId: number, data: Partial<{ name: string; lastName: string; email: string }>): Promise<User> {
+    const updateData: Partial<{ name: string; lastName: string; email: string; emailVerified: boolean }> = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+
+    if (data.lastName !== undefined) {
+      updateData.lastName = data.lastName;
+    }
+    
+    if (data.email !== undefined) {
+      const currentUser = await UserRepository.findById(userId);
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      const emailChanged = currentUser.email.toLowerCase() !== data.email.toLowerCase();
+
+      if (emailChanged) {
+        const existingUser = await UserRepository.findByEmail(data.email);
+        if (existingUser && existingUser.id !== userId) {
+          const error: any = new Error("Email already in use");
+          error.statusCode = 409;
+          throw error;
+        }
+
+// El correo actual sigue siendo válido y verificado hasta que se confirme el nuevo.
+        const rawToken = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await sequelize.transaction(async (transaction) => {
+          // esto invalida cualquier token de cambio de correo anterior sin usar,
+          // antes de crear el nuevo, dentro de la misma transacción.
+          await EmailVerificationTokenRepository.invalidateUnusedForUser(userId, transaction);
+
+          await EmailVerificationTokenRepository.create(
+            { userId, tokenHash, newEmail: data.email, expiresAt, usedAt: null },
+            transaction
+          );
+        });
+
+        await EmailService.sendEmailChangeVerification({
+          to: data.email,
+          name: currentUser.name,
+          token: rawToken,
+        });
+      }
+    }
+
+    return await UserRepository.update(userId, updateData); // updateData ya no incluye email/emailVerified si solo cambió el correo
   }
 }
 

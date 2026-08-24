@@ -16,13 +16,14 @@ export interface UserMembershipAttributes {
   userId: number;
   membershipId: number;
   membershipCode: string | null;
+  qrCode: string | null; 
   startDate: Date;
   endDate: Date | null;
   status: string;
 }
 
 export interface UserMembershipCreationAttributes
-  extends Optional<UserMembershipAttributes, "id" | "membershipCode"> {}
+  extends Optional<UserMembershipAttributes, "id" | "membershipCode" | "qrCode"> {}
 
 class UserMembership
   extends Model<UserMembershipAttributes, UserMembershipCreationAttributes>
@@ -32,6 +33,7 @@ class UserMembership
   public userId!: number;
   public membershipId!: number;
   public membershipCode!: string | null;
+  public qrCode!: string | null;
   public startDate!: Date;
   public endDate!: Date | null;
   public status!: string;
@@ -65,6 +67,11 @@ UserMembership.init(
       allowNull: true,
       unique: true,
       defaultValue: generateMembershipCode,
+    },
+    qrCode: {
+      type: DataTypes.STRING(40),
+      allowNull: true,
+      unique: true,
     },
     startDate: {
       type: DataTypes.DATE,

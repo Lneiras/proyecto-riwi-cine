@@ -43,14 +43,14 @@ const options: swaggerJSDoc.Options = {
         description: "Servidor local",
       },
     ],
-    components: { 
-      securitySchemes: { 
-        bearerAuth: { 
-          type: "http", 
-          scheme: "bearer", 
-          bearerFormat: "JWT", 
-        }, 
-      }, 
+    components: {  // esto agrega el boton de "Authorize" en Swagger UI para autenticación con JWT
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
     },
   },
   apis: [

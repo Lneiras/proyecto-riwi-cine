@@ -14,12 +14,13 @@ export interface EmailVerificationTokenAttributes {
   id: number;
   userId: number;
   tokenHash: string;
+  newEmail: string | null;
   expiresAt: Date;
   usedAt: Date | null;
 }
 
 export interface EmailVerificationTokenCreationAttributes
-  extends Optional<EmailVerificationTokenAttributes, "id" | "usedAt"> {}
+  extends Optional<EmailVerificationTokenAttributes, "id"| "newEmail" | "usedAt"> {}
 
 class EmailVerificationToken
   extends Model<EmailVerificationTokenAttributes, EmailVerificationTokenCreationAttributes>
@@ -28,6 +29,7 @@ class EmailVerificationToken
   public id!: number;
   public userId!: number;
   public tokenHash!: string;
+  public newEmail!: string | null;
   public expiresAt!: Date;
   public usedAt!: Date | null;
 }
@@ -51,6 +53,10 @@ EmailVerificationToken.init(
       type: DataTypes.STRING(64),
       allowNull: false,
       unique: true,
+    },
+    newEmail: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
     },
     expiresAt: {
       type: DataTypes.DATE,
