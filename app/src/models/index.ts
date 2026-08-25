@@ -48,6 +48,8 @@ import PremiereNotification from "./premiere-notification.model";
 import Seat from "./seat.model";
 import SeatLock from "./seat-lock.model";
 import ReservationEntry from "./reservation-entry.model";
+import Ticket from "./ticket.model";
+import Invoice from "./invoice.model";
 
 /**
  * Asociaciones entre modelos
@@ -162,6 +164,16 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
+// Entradas Digitales y Factura Electrónica (HU-014)
+User.hasMany(Ticket, {foreignKey: "userId"});
+Ticket.belongsTo(User, {foreignKey: "userId"});
+
+ReservationEntry.hasOne(Ticket, {foreignKey: "reservationEntryId"});
+Ticket.belongsTo(ReservationEntry, {foreignKey: "reservationEntryId"});
+
+User.hasMany(Invoice, {foreignKey: "userId"});
+Invoice.belongsTo(User, {foreignKey: "userId"});
+
 
 export {
   Country,
@@ -190,4 +202,6 @@ export {
   Seat,
   SeatLock,
   ReservationEntry,
+  Ticket,
+  Invoice,
 };
