@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-import { 
+import {
     Ticket,
     ReservationEntry,
     Showtime,
@@ -8,13 +8,13 @@ import {
     Room,
     Cinema,
     Format,
-    Language, 
+    Language,
 } from "../models";
 
 class TicketRepository {
-    async findByUserId(userId: number): Promise<Ticket[]>{
+    async findByUserId(userId: number): Promise<Ticket[]> {
         return Ticket.findAll({
-            where: {userId},
+            where: { userId },
             include: [
                 {
                     model: ReservationEntry,
@@ -35,4 +35,28 @@ class TicketRepository {
             order: [["createAt", "DESC"]],
         });
     }
+
+    async findById(id: number): Promise<Ticket | null> {
+        return Ticket.findByPk(id, {
+            include: [
+                {
+                    model: ReservationEntry,
+                    include: [
+                        {
+                            model: Showtime,
+                            include: [
+                                Movie,
+                                Room,
+                                Format,
+                                Language,
+                            ],
+                        },
+                        Seat,
+                    ],
+                },
+            ],
+        });
+    }
 }
+
+export default new TicketRepository()
