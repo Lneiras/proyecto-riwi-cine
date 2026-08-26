@@ -1,61 +1,22 @@
-import { Model } from "sequelize";
-import {
-    Ticket,
-    ReservationEntry,
-    Showtime,
-    Seat,
-    Movie,
-    Room,
-    Cinema,
-    Format,
-    Language,
-} from "../models";
+import { Ticket } from "../models";
+import { CreateTicketDto } from "../dto/create-ticket.dto";
+
 
 class TicketRepository {
+
+    async create(data: CreateTicketDto): Promise<Ticket>{
+        return Ticket.create(data);
+    }
+
     async findByUserId(userId: number): Promise<Ticket[]> {
         return Ticket.findAll({
             where: { userId },
-            include: [
-                {
-                    model: ReservationEntry,
-                    include: [
-                        {
-                            model: Showtime,
-                            include: [
-                                Movie,
-                                Room,
-                                Format,
-                                Language,
-                            ],
-                        },
-                        Seat,
-                    ],
-                },
-            ],
             order: [["createAt", "DESC"]],
         });
     }
 
     async findById(id: number): Promise<Ticket | null> {
-        return Ticket.findByPk(id, {
-            include: [
-                {
-                    model: ReservationEntry,
-                    include: [
-                        {
-                            model: Showtime,
-                            include: [
-                                Movie,
-                                Room,
-                                Format,
-                                Language,
-                            ],
-                        },
-                        Seat,
-                    ],
-                },
-            ],
-        });
+        return Ticket.findByPk(id);
     }
 }
 
