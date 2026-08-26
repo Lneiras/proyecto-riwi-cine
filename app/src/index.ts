@@ -11,7 +11,7 @@ import "dotenv/config";
 
 import app from "./server";
 import sequelize from "./config/database";
-import { validateEnv, validateSeatConfig, } from "./config/env";
+import { validateEnv, validateSeatConfig, validateCartConfig } from "./config/env";
 import premiereNotificationJob from "./jobs/premiere-notification.job";
 
 // Registra todos los modelos del dominio (ver comentario en el archivo)
@@ -28,6 +28,7 @@ const start = async () => {
     // HU-001 Escenario 2: falla con mensaje claro si falta una variable obligatoria
     validateEnv();
     validateSeatConfig();
+    validateCartConfig();
 
     await sequelize.authenticate();
     console.log("Conexión a la BD establecida...");

@@ -48,6 +48,8 @@ import PremiereNotification from "./premiere-notification.model";
 import Seat from "./seat.model";
 import SeatLock from "./seat-lock.model";
 import ReservationEntry from "./reservation-entry.model";
+import GiftCard from "./gift-card.model";
+import GiftCardTransaction from "./gift-card-transaction.model";
 
 /**
  * Asociaciones entre modelos
@@ -162,6 +164,14 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
+// Gift cards compradas para regalar y su auditoría monetaria (HU-011)
+User.hasMany(GiftCard, { foreignKey: "purchaserUserId", as: "purchasedGiftCards" });
+GiftCard.belongsTo(User, { foreignKey: "purchaserUserId", as: "purchaser" });
+GiftCard.hasMany(GiftCardTransaction, { foreignKey: "giftCardId", as: "transactions" });
+GiftCardTransaction.belongsTo(GiftCard, { foreignKey: "giftCardId" });
+User.hasMany(GiftCardTransaction, { foreignKey: "userId" });
+GiftCardTransaction.belongsTo(User, { foreignKey: "userId" });
+
 
 export {
   Country,
@@ -190,4 +200,6 @@ export {
   Seat,
   SeatLock,
   ReservationEntry,
+  GiftCard,
+  GiftCardTransaction,
 };

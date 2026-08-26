@@ -1,5 +1,4 @@
 import { Router} from "express";
-
 import { getSeats } from "../controllers/seat.controller";
 
 
