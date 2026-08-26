@@ -48,6 +48,12 @@ import PremiereNotification from "./premiere-notification.model";
 import Seat from "./seat.model";
 import SeatLock from "./seat-lock.model";
 import ReservationEntry from "./reservation-entry.model";
+import SnackCategory from "./snackCategory.model";
+import Snack from "./snack.model";
+import Inventory from "./inventory.model";
+import SnackPromotion from "./snackPromotion.model";
+
+
 
 /**
  * Asociaciones entre modelos
@@ -162,6 +168,22 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
+// HU12
+SnackCategory.hasMany(Snack, { foreignKey: "snackCategoryId", as: "snacks" });
+Snack.belongsTo(SnackCategory, { foreignKey: "snackCategoryId", as: "category" });
+
+// Un snack tiene un único registro de inventario (hoy)
+Snack.hasOne(Inventory, { foreignKey: "snackId", as: "inventory" });
+Inventory.belongsTo(Snack, { foreignKey: "snackId", as: "snack" });
+
+// Promociones: opcionalmente ligadas a snack o a categoría
+Snack.hasMany(SnackPromotion, { foreignKey: "snackId", as: "promotions" });
+SnackPromotion.belongsTo(Snack, { foreignKey: "snackId", as: "snack" });
+
+SnackCategory.hasMany(SnackPromotion, { foreignKey: "snackCategoryId", as: "promotions" });
+SnackPromotion.belongsTo(SnackCategory, { foreignKey: "snackCategoryId", as: "category" });
+
+
 
 export {
   Country,
@@ -190,4 +212,8 @@ export {
   Seat,
   SeatLock,
   ReservationEntry,
+  SnackCategory, 
+  Snack, 
+  Inventory, 
+  SnackPromotion
 };
