@@ -134,6 +134,99 @@ class EmailService {
     }
   }
 
+  async sendGiftCardEmail(data: {
+  to: string;
+
+  recipientName:
+    | string
+    | null;
+
+  senderName:
+    | string
+    | null;
+
+  message:
+    | string
+    | null;
+
+  code: string;
+
+  amount: number;
+
+  expiresAt: Date;
+}): Promise<void> {
+
+  await this.send({
+    to: data.to,
+
+    subject:
+      "Tu Gift Card de Multicine",
+
+    consoleLabel:
+      `✉ Gift Card enviada a ${data.to}`,
+
+    html: `
+      <h2>Gift Card de Multicine</h2>
+
+      <p>
+        Hola ${
+          escapeHtml(
+            data.recipientName ||
+              "cliente"
+          )
+        }.
+      </p>
+
+      ${
+        data.senderName
+          ? `<p>De parte de ${escapeHtml(
+              data.senderName
+            )}.</p>`
+          : ""
+      }
+
+      <p>
+        Has recibido una Gift Card
+        por valor de
+        <strong>
+          $${data.amount.toLocaleString(
+            "es-CO"
+          )}
+        </strong>.
+      </p>
+
+      <p>
+        Código:
+        <strong>
+          ${escapeHtml(data.code)}
+        </strong>
+      </p>
+
+      ${
+        data.message
+          ? `<p>${escapeHtml(
+              data.message
+            )}</p>`
+          : ""
+      }
+
+      <p>
+        Fecha de vencimiento:
+        ${data.expiresAt.toLocaleDateString(
+          "es-CO"
+        )}
+      </p>
+    `,
+
+    /*
+     * En desarrollo también podremos
+     * ver el código en consola.
+     */
+    debugToken:
+      data.code,
+  });
+  }
+
   /**
  * HU-008 RN-034: correo de confirmación cuando el usuario cambia su
  * dirección de correo desde su perfil. Reutiliza la misma

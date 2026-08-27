@@ -22,6 +22,11 @@ import profileRoutes from "./routes/profile.routes";
 import seatRoutes from "./routes/seat.routes";
 import reservationRoutes from "./routes/reservation.routes";
 import showtimeRoutes from "./routes/showtime.routes";
+import orderRoutes from "./routes/order.routes";
+import paymentRoutes from "./routes/payment.routes";
+import checkoutRoutes from "./routes/checkout.routes";
+import cartRoutes from "./routes/cart.routes";
+import giftCardRoutes from "./routes/gift-card.routes";
 
 import cors from "cors";
 import { corsOptions } from "./config/cors";
@@ -55,6 +60,12 @@ app.use("/api/v1/membership", membershipRoutes);
 app.use("/api/v1/functions",seatRoutes);
 app.use("/api/v1/reservations",reservationRoutes);
 app.use("/api/functions", showtimeRoutes);
+app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/checkout",checkoutRoutes);
+app.use("/api/v1/cart",cartRoutes);
+app.use("/api/v1/gift-cards",giftCardRoutes);
+
 
 // Health check (HU-001 Escenario 1)
 app.use("/api/v1/health", healthRoutes);

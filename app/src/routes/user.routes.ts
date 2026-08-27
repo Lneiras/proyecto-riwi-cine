@@ -143,7 +143,7 @@ router.get("/", getUsers);
  *                 example: false
  *               captchaToken:
  *                 type: string
- *                 description: Token generado por Cloudflare Turnstile
+ *                 description: "0x4AAAAAAEVnSUPFjjtKsLG4orWfdyKXFdw"
  *     responses:
  *       201:
  *         description: Usuario y membresía creados; correo de activación procesado
