@@ -17,3 +17,5 @@ class InvoiceRepository{
         });
     }
 }
+
+export default new InvoiceRepository();
