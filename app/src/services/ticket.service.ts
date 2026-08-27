@@ -76,4 +76,20 @@ class TicketService{
     async getMyTickets(userId:number){
         return TicketRepository.findByUserId(userId);
     }
+
+    async getTickets(userId:number, ticketId:number){
+        const ticket = await TicketRepository.findById(ticketId);
+        
+        if (!ticket) {
+            throw new Error("Entrada no encontrada");
+        }
+
+        if(ticket.userId !== userId){
+            throw new Error("No tienes permiso para consultar esta entrada");
+        }
+
+        return ticket;
+    }
 }
+
+export default new TicketService();
