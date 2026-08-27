@@ -72,4 +72,8 @@ class TicketService{
             invoice,
         };
     }
+
+    async getMyTickets(userId:number){
+        return TicketRepository.findByUserId(userId);
+    }
 }
