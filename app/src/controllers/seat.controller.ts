@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import seatService from "../services/seat.service";
+import cartService from "../services/cart.service";
 
 export const getSeats = async (
   req: Request,
@@ -67,9 +68,17 @@ export const lockSeats = async (
       req.userId
     );
 
+    let cart;
+    try {
+      cart = await cartService.addLockedSeats(req.userId, functionId, data.seatIds);
+    } catch (error) {
+      await seatService.releaseSeats(functionId, data.seatIds, req.userId);
+      throw error;
+    }
+
     return res.status(200).json({
       success: true,
-      data,
+      data: { ...data, cart },
     });
   } catch (error) {
     const message =
@@ -123,6 +132,8 @@ export const releaseSeats = async (
       seatIds,
       req.userId
     );
+
+    await cartService.removeTickets(req.userId, functionId, released).catch(() => undefined);
 
     return res.status(200).json({
       success: true,

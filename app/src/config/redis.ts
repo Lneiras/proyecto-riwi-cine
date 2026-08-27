@@ -35,6 +35,8 @@ export const SEAT_LOCK_PREFIX = "cine:seat-lock"; //prefijo de llaves
 // Evita que sobrescribas accidentalmente otra información alojada en el mismo servidor de Redis.
 
 export const SEAT_EVENT_CHANNEL = "cine:seat-events"; // esto es el canal de transmision pub
+export const CART_PREFIX = "cine:cart:user";
+export const GIFT_CARD_LOCK_PREFIX = "cine:gift-card-lock";
 //Redis incluye un sistema de mensajería llamado Pub/Sub (Publicar/Suscribir), similar a una frecuencia de radio. 
 // Este es el nombre del canal por donde tu servidor grita eventos cuando cambia el estado de un asiento 
 // (por ejemplo: "Se bloqueó la silla 12"). Los WebSockets se suscriben a este canal para escuchar los cambios y 
@@ -72,6 +74,5 @@ export async function connectRedisSubscriber() {
 
   console.log("Conexión del Redis subscriber establecida...");
 }
-
 
 

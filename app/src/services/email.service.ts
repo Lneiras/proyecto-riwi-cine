@@ -20,6 +20,16 @@ interface PasswordResetEmailData {
   token: string;
 }
 
+interface GiftCardEmailData {
+  to: string;
+  recipientName?: string | null;
+  senderName?: string | null;
+  message?: string | null;
+  code: string;
+  amount: number;
+  expiresAt: Date;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -30,6 +40,22 @@ function escapeHtml(value: string): string {
 }
 
 class EmailService {
+  async sendGiftCardEmail(data: GiftCardEmailData): Promise<void> {
+    await this.send({
+      to: data.to,
+      subject: "Recibiste una gift card de Multicine",
+      consoleLabel: `✉ Gift card para ${data.to}`,
+      html: `
+        <p>Hola ${escapeHtml(data.recipientName || "")},</p>
+        <p>${escapeHtml(data.senderName || "Alguien especial")} te regaló una gift card por $${data.amount.toFixed(2)}.</p>
+        ${data.message ? `<p>Mensaje: ${escapeHtml(data.message)}</p>` : ""}
+        <p>Código: <strong>${escapeHtml(data.code)}</strong></p>
+        <p>Válida hasta ${data.expiresAt.toISOString().slice(0, 10)}.</p>
+      `,
+      debugToken: data.code,
+    });
+  }
+
   /**
    * Envía el correo de activación sin agregar una librería de correo.
    * En producción usa la API HTTP de Resend mediante el fetch nativo de Node.
@@ -37,7 +63,7 @@ class EmailService {
   async sendActivationEmail(data: ActivationEmailData): Promise<void> {
     const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
       .replace(/\/$/, "");
-    const activationUrl = `${baseUrl}/users/auth/verify-email?token=${encodeURIComponent(data.token)}`;
+    const activationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
 
     await this.send({
       to: data.to,
@@ -60,7 +86,7 @@ class EmailService {
   async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
     const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
       .replace(/\/$/, "");
-    const resetUrl = `${baseUrl}/users/auth/reset-password?token=${encodeURIComponent(data.token)}`;
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${encodeURIComponent(data.token)}`;
 
     await this.send({
       to: data.to,

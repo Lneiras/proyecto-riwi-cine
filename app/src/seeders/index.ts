@@ -45,6 +45,10 @@ import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
 import { seedUserMemberships } from "./user-membership.seed";
 import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
+import { seedSnackCategories } from "./snack-category.seed";
+import { seedSnacks } from "./snack.seed";
+import { seedInventory } from "./inventory.seed";
+import { seedSnackPromotions } from "./snack-promotion.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -82,6 +86,12 @@ async function runSeeders(): Promise<void> {
   const userIds = await seedUsers(roleIds, membershipIds);
   await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
+
+  // Confitería 
+  const snackCategoryIds = await seedSnackCategories();
+  const snackIds = await seedSnacks(snackCategoryIds);
+  await seedInventory(snackIds);
+  await seedSnackPromotions(snackIds, snackCategoryIds);        
 
   console.log("\n✅ Seed completado con éxito.");
 }

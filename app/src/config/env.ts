@@ -48,3 +48,15 @@ export function validateSeatConfig(): void {
   if (preferentialPolicy !== "allow" && preferentialPolicy !== "deny" ) { 
     throw new Error( "PREFERENTIAL_SEAT_POLICY debe ser 'allow' o 'deny'" ); }
 }
+
+export function validateCartConfig(): void {
+  const ttl = Number(process.env.CART_TTL_SECONDS || 600);
+  const tax = Number(process.env.CART_TAX_PERCENT || 0);
+  const expirationDays = Number(process.env.GIFT_CARD_EXPIRATION_DAYS || 365);
+  const min = Number(process.env.GIFT_CARD_MIN_AMOUNT || 10000);
+  const max = Number(process.env.GIFT_CARD_MAX_AMOUNT || 500000);
+  if (!Number.isInteger(ttl) || ttl <= 0) throw new Error("CART_TTL_SECONDS debe ser un entero mayor que 0");
+  if (!Number.isFinite(tax) || tax < 0 || tax > 100) throw new Error("CART_TAX_PERCENT debe estar entre 0 y 100");
+  if (!Number.isInteger(expirationDays) || expirationDays <= 0) throw new Error("GIFT_CARD_EXPIRATION_DAYS debe ser mayor que 0");
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max < min) throw new Error("El rango de valores de gift card no es válido");
+}
