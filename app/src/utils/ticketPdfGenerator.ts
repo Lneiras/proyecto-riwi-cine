@@ -1,4 +1,4 @@
-import PDFDocument, { moveDown } from "pdfkit";
+import PDFDocument from "pdfkit";
 
 interface TicketPdfData {
     ticketCode: string;

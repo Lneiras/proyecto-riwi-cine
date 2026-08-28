@@ -48,7 +48,9 @@ export async function seedSeats(
     numberName: string;
     capacity: number;
   }[]
-): Promise<void> {
+): Promise<Map<string, number>> {
+  const seatIdsByKey = new Map<string, number>();
+
   for (const roomData of roomSeedData) {
     const roomId = roomIdsByKey.get(
       `${roomData.cinemaName}|${roomData.numberName}`
@@ -61,7 +63,7 @@ export async function seedSeats(
     const seats = buildSeats(roomData.capacity);
 
     for (const seat of seats) {
-      await Seat.findOrCreate({
+      const [seatRow] = await Seat.findOrCreate({
         where: {
           roomId,
           row: seat.row,
@@ -75,8 +77,12 @@ export async function seedSeats(
           status: "available",
         },
       });
+
+      seatIdsByKey.set(`${roomData.cinemaName}|${roomData.numberName}|${seat.row}${seat.number}`, seatRow.id);
     }
 
     console.log(`[OK] seats: ${roomData.numberName} -> ${seats.length}`);
   }
+
+  return seatIdsByKey;
 }
