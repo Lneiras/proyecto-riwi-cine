@@ -44,7 +44,10 @@ import { seedUserGenres } from "./user-genre.seed";
 import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
 import { seedUserMemberships } from "./user-membership.seed";
-import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
+import { seedSeats } from "./seat.seed";
+import { roomSeedData } from "./room.seed";
+import { seedNotificationPreferences } from "./notification-preference.seed";
+import { seedNotificationHistories } from "./notification-history.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -67,7 +70,7 @@ async function runSeeders(): Promise<void> {
   // Infraestructura física
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
-  await seedSeats( roomIds, roomSeedData );
+  await seedSeats(roomIds, roomSeedData);
 
   // Catálogo de películas y funciones
   const movieIds = await seedMovies(genreIds, statusIds);
@@ -78,10 +81,12 @@ async function runSeeders(): Promise<void> {
   const membershipIds = await seedMemberships();
   await seedUserGenres();
 
-  // Usuarios y suscripciones a estrenos
+  // Usuarios, membresías y notificaciones (HU-005, HU-006, HU-015)
   const userIds = await seedUsers(roleIds, membershipIds);
   await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
+  await seedNotificationPreferences(userIds);
+  await seedNotificationHistories(userIds);
 
   console.log("\n✅ Seed completado con éxito.");
 }
