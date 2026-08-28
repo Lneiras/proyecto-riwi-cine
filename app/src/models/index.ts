@@ -1,4 +1,3 @@
-
 /**
  * Índice central de modelos
  * -------------------------
@@ -45,6 +44,7 @@ import Room from "./room.model";
 import Movie from "./movie.model";
 import Showtime from "./showtime.model";
 import PremiereNotification from "./premiere-notification.model";
+import NotificationHistory from "./notification-history.model";
 import Seat from "./seat.model";
 import SeatLock from "./seat-lock.model";
 import ReservationEntry from "./reservation-entry.model";
@@ -110,7 +110,10 @@ User.belongsTo(City, { foreignKey: "cityId" });
 City.hasMany(User, { foreignKey: "cityId" });
 
 // Complejo favorito del perfil (HU-006)
-User.belongsTo(Cinema, { foreignKey: "favoriteCinemaId", as: "favoriteCinema" });
+User.belongsTo(Cinema, {
+  foreignKey: "favoriteCinemaId",
+  as: "favoriteCinema",
+});
 Cinema.hasMany(User, { foreignKey: "favoriteCinemaId", as: "favoriteUsers" });
 
 // Refresh tokens (JWT)
@@ -133,20 +136,20 @@ Room.hasMany(Showtime, { foreignKey: "roomId" });
 Showtime.belongsTo(Room, { foreignKey: "roomId" });
 
 Room.hasMany(Seat, { foreignKey: "roomId" });
-Seat.belongsTo(Room, { foreignKey: "roomId",});
+Seat.belongsTo(Room, { foreignKey: "roomId" });
 
 //relaciones sillas bloqueadas perteneces a ciertas funciones
-Showtime.hasMany(SeatLock, { foreignKey: "showtimeId",});
-SeatLock.belongsTo(Showtime, { foreignKey: "showtimeId",});
+Showtime.hasMany(SeatLock, { foreignKey: "showtimeId" });
+SeatLock.belongsTo(Showtime, { foreignKey: "showtimeId" });
 
-Seat.hasMany(SeatLock, { foreignKey: "seatId",});
-SeatLock.belongsTo(Seat, { foreignKey: "seatId",});
+Seat.hasMany(SeatLock, { foreignKey: "seatId" });
+SeatLock.belongsTo(Seat, { foreignKey: "seatId" });
 
 //
-Showtime.hasMany(ReservationEntry, { foreignKey: "showtimeId",});
-ReservationEntry.belongsTo(Showtime, { foreignKey: "showtimeId",});
+Showtime.hasMany(ReservationEntry, { foreignKey: "showtimeId" });
+ReservationEntry.belongsTo(Showtime, { foreignKey: "showtimeId" });
 
-Seat.hasMany(ReservationEntry, { foreignKey: "seatId",});
+Seat.hasMany(ReservationEntry, { foreignKey: "seatId" });
 ReservationEntry.belongsTo(Seat, { foreignKey: "seatId" });
 
 Format.hasMany(Showtime, { foreignKey: "formatId" });
@@ -162,6 +165,9 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
 
+// Historial de notificaciones (HU-015)
+User.hasMany(NotificationHistory, { foreignKey: "userId" });
+NotificationHistory.belongsTo(User, { foreignKey: "userId" });
 
 export {
   Country,
@@ -187,6 +193,7 @@ export {
   Movie,
   Showtime,
   PremiereNotification,
+  NotificationHistory,
   Seat,
   SeatLock,
   ReservationEntry,
