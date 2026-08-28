@@ -35,6 +35,12 @@ const router = Router();
  *                   name: "Cineplex Medellín"
  *       404:
  *         description: La función no existe
+ *       409:
+ *         description: La funcion ya inició y no puede seleccionarse
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Esta funcion ya inició y no puede seleccionarse"
  */
 router.get("/:id", getFunctionById); // GET /api/functions/:id
 
@@ -62,6 +68,12 @@ router.get("/:id", getFunctionById); // GET /api/functions/:id
  *               finalPrice: 31000
  *       404:
  *         description: La función no existe
+ *       409:
+ *         description: La funcion ya inició y no puede seleccionarse
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Esta funcion ya inició y no puede seleccionarse"
  */
 router.get("/:id/prices", getFunctionPrice); // GET /api/functions/:id/prices
 

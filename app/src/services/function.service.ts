@@ -41,8 +41,8 @@ class FunctionService {
         }
 
         return {
-            id: id,
-            basePrice: showtime.basePrice,
+            functionId: showtime.id,
+            basePrice: Number(showtime.basePrice),
             finalPrice
         }
     }
