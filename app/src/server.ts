@@ -23,6 +23,8 @@ import profileRoutes from "./routes/profile.routes";
 import seatRoutes from "./routes/seat.routes";
 import reservationRoutes from "./routes/reservation.routes";
 import showtimeRoutes from "./routes/showtime.routes";
+import ticketRoutes from "./routes/ticket.routes";
+import invoiceRoutes from "./routes/invoice.routes";
 
 import cors from "cors";
 import { corsOptions } from "./config/cors";
@@ -57,6 +59,8 @@ app.use("/api/v1/membership", membershipRoutes);
 app.use("/api/v1/functions",seatRoutes);
 app.use("/api/v1/reservations",reservationRoutes);
 app.use("/api/functions", showtimeRoutes);
+app.use("/api/v1/tickets", ticketRoutes);
+app.use("/api/v1/invoice", invoiceRoutes);
 
 // Health check (HU-001 Escenario 1)
 app.use("/api/v1/health", healthRoutes);

@@ -174,6 +174,9 @@ Ticket.belongsTo(ReservationEntry, {foreignKey: "reservationEntryId"});
 User.hasMany(Invoice, {foreignKey: "userId"});
 Invoice.belongsTo(User, {foreignKey: "userId"});
 
+Invoice.hasMany(Ticket, { foreignKey: "invoiceId" });
+Ticket.belongsTo(Invoice, { foreignKey: "invoiceId" });
+
 
 export {
   Country,
