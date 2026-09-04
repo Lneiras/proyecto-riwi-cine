@@ -43,7 +43,7 @@ Ticket.init(
        reservationEntryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true, // RN-057: una reserva solo puede generar UNA entrada
+        unique: true, // RN-057: una reservationEntry solo puede generar un Ticket
         references: {
             model: "reservation_entries",
             key: "id",
