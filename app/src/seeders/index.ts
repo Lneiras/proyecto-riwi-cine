@@ -68,11 +68,11 @@ async function runSeeders(): Promise<void> {
   // Infraestructura física
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
-  await seedSeats(roomIds, roomSeedData);
+  const seatIdsByKey = await seedSeats(roomIds, roomSeedData);
 
   // Catálogo de películas y funciones
   const movieIds = await seedMovies(genreIds, statusIds);
-  await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
+  const showtimeIdsByKey = await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
 
   // Catálogos del perfil de usuario
   const roleIds = await seedRoles();
@@ -84,9 +84,6 @@ async function runSeeders(): Promise<void> {
   await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
 
-  //
-  const seatIdsByKey = await seedSeats(roomIds, roomSeedData);
-  const showtimeIdsByKey = await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
 
   if (process.env.NODE_ENV !== "production") {
     await seedTestReservationEntries(showtimeIdsByKey, seatIdsByKey);
