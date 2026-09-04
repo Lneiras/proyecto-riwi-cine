@@ -18,6 +18,7 @@
  *  - POSTGRES_PORT: Puerto de conexión (por defecto `5432`).
  */
 
+import "dotenv/config";
 import { Sequelize } from "sequelize";
 
 /**
