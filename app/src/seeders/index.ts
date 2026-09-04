@@ -45,6 +45,9 @@ import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
 import { seedUserMemberships } from "./user-membership.seed";
 import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
+import { seedTestReservationEntries } from "./reservation-entry.seed";
+import { seedCategories } from "./category.seed";
+import { seedProducts } from "./product.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -67,21 +70,29 @@ async function runSeeders(): Promise<void> {
   // Infraestructura física
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
-  await seedSeats( roomIds, roomSeedData );
+  const seatIdsByKey = await seedSeats(roomIds, roomSeedData);
 
   // Catálogo de películas y funciones
   const movieIds = await seedMovies(genreIds, statusIds);
-  await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
+  const showtimeIdsByKey = await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
 
   // Catálogos del perfil de usuario
   const roleIds = await seedRoles();
   const membershipIds = await seedMemberships();
   await seedUserGenres();
 
+  const categoryIds = await seedCategories();
+  await seedProducts(categoryIds);
+
   // Usuarios y suscripciones a estrenos
   const userIds = await seedUsers(roleIds, membershipIds);
   await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
+
+
+  if (process.env.NODE_ENV !== "production") {
+    await seedTestReservationEntries(showtimeIdsByKey, seatIdsByKey);
+  }
 
   console.log("\n✅ Seed completado con éxito.");
 }

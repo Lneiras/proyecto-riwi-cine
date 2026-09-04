@@ -48,6 +48,17 @@ import PremiereNotification from "./premiere-notification.model";
 import Seat from "./seat.model";
 import SeatLock from "./seat-lock.model";
 import ReservationEntry from "./reservation-entry.model";
+import Invoice from "./invoice.model";
+import Reservation from "./reservation.model";
+import Category from "./category.model";
+import Product from "./product.model";
+import ReservationProduct from "./reservation-product.model";
+import Payment from "./payment.model";
+import Ticket from "./ticket.model";
+import AuditLog from "./audit-log.model";
+import GiftCard from "./gift-card.model";
+import GiftCardTransaction from "./gift-card-transaction.model";
+import GiftCardPayment from "./gift-card-payment.model";
 
 /**
  * Asociaciones entre modelos
@@ -149,6 +160,33 @@ ReservationEntry.belongsTo(Showtime, { foreignKey: "showtimeId",});
 Seat.hasMany(ReservationEntry, { foreignKey: "seatId",});
 ReservationEntry.belongsTo(Seat, { foreignKey: "seatId" });
 
+Reservation.hasMany(ReservationEntry, { foreignKey: "reservationId" });
+ReservationEntry.belongsTo(Reservation, { foreignKey: "reservationId" });
+
+Reservation.hasMany(ReservationProduct, { foreignKey: "reservationId" });
+ReservationProduct.belongsTo(Reservation, { foreignKey: "reservationId" });
+
+Category.hasMany(Product, { foreignKey: "categoryId" });
+Product.belongsTo(Category, { foreignKey: "categoryId" });
+
+Product.hasMany(ReservationProduct, { foreignKey: "productId" });
+ReservationProduct.belongsTo(Product, { foreignKey: "productId" });
+
+Reservation.hasMany(Payment, { foreignKey: "reservationId" });
+Payment.belongsTo(Reservation, { foreignKey: "reservationId" });
+
+ReservationEntry.hasOne(Ticket, { foreignKey: "reservationEntryId" });
+Ticket.belongsTo(ReservationEntry, { foreignKey: "reservationEntryId" });
+
+User.hasMany(Reservation, { foreignKey: "userId" });
+Reservation.belongsTo(User, { foreignKey: "userId" });
+
+User.hasMany(Ticket, { foreignKey: "currentHolderId" });
+Ticket.belongsTo(User, { foreignKey: "currentHolderId" });
+
+User.hasMany(AuditLog, { foreignKey: "userId" });
+AuditLog.belongsTo(User, { foreignKey: "userId" });
+
 Format.hasMany(Showtime, { foreignKey: "formatId" });
 Showtime.belongsTo(Format, { foreignKey: "formatId" });
 
@@ -161,6 +199,33 @@ PremiereNotification.belongsTo(User, { foreignKey: "userId" });
 
 Movie.hasMany(PremiereNotification, { foreignKey: "movieId" });
 PremiereNotification.belongsTo(Movie, { foreignKey: "movieId" });
+
+// Entradas Digitales y Factura Electrónica (HU-014)
+User.hasMany(Ticket, {foreignKey: "userId"});
+Ticket.belongsTo(User, {foreignKey: "userId"});
+
+ReservationEntry.hasOne(Ticket, {foreignKey: "reservationEntryId"});
+Ticket.belongsTo(ReservationEntry, {foreignKey: "reservationEntryId"});
+
+User.hasMany(Invoice, {foreignKey: "userId"});
+Invoice.belongsTo(User, {foreignKey: "userId"});
+
+Invoice.hasMany(Ticket, { foreignKey: "invoiceId" });
+Ticket.belongsTo(Invoice, { foreignKey: "invoiceId" });
+User.hasMany(GiftCard, { foreignKey: "purchaserUserId", as: "purchasedGiftCards" });
+GiftCard.belongsTo(User, { foreignKey: "purchaserUserId", as: "purchaser" });
+
+GiftCard.hasMany(GiftCardTransaction, { foreignKey: "giftCardId", as: "transactions" });
+GiftCardTransaction.belongsTo(GiftCard, { foreignKey: "giftCardId" });
+
+User.hasMany(GiftCardTransaction, { foreignKey: "userId" });
+GiftCardTransaction.belongsTo(User, { foreignKey: "userId" });
+
+GiftCard.hasMany(GiftCardPayment, { foreignKey: "giftCardId", as: "payments" });
+GiftCardPayment.belongsTo(GiftCard, { foreignKey: "giftCardId" });
+
+User.hasMany(GiftCardPayment, { foreignKey: "userId" });
+GiftCardPayment.belongsTo(User, { foreignKey: "userId" });
 
 
 export {
@@ -190,4 +255,15 @@ export {
   Seat,
   SeatLock,
   ReservationEntry,
+  Invoice,
+  Reservation,
+  Category,
+  Product,
+  ReservationProduct,
+  Payment,
+  Ticket,
+  AuditLog,
+  GiftCard,
+  GiftCardTransaction,
+  GiftCardPayment,
 };
