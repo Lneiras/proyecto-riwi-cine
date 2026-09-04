@@ -46,6 +46,8 @@ import { seedPremiereNotifications } from "./premiere-notification.seed";
 import { seedUserMemberships } from "./user-membership.seed";
 import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
 import { seedTestReservationEntries } from "./reservation-entry.seed";
+import { seedCategories } from "./category.seed";
+import { seedProducts } from "./product.seed";
 
 async function runSeeders(): Promise<void> {
   await sequelize.authenticate();
@@ -78,6 +80,9 @@ async function runSeeders(): Promise<void> {
   const roleIds = await seedRoles();
   const membershipIds = await seedMemberships();
   await seedUserGenres();
+
+  const categoryIds = await seedCategories();
+  await seedProducts(categoryIds);
 
   // Usuarios y suscripciones a estrenos
   const userIds = await seedUsers(roleIds, membershipIds);
