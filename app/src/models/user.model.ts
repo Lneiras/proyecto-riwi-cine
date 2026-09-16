@@ -48,27 +48,31 @@ export interface UserAttributes {
  * para mantener compatibilidad con los seeds y flujos anteriores. El endpoint
  * público `/auth/register` sí los valida de acuerdo con la historia de usuario.
  */
-export interface UserCreationAttributes
-  extends Optional<
-    UserAttributes,
-    | "id"
-    | "lastName"
-    | "documentType"
-    | "documentNumber"
-    | "birthDate"
-    | "phone"
-    | "favoriteCinemaId"
-    | "acceptDataProcessing"
-    | "acceptTerms"
-    | "acceptCommercialCommunications"
-    | "emailVerified"
-    | "accountStatus"
-    | "registeredAt"
-    | "failedLoginAttempts"
-    | "lockedUntil"
-  > {}
+export interface UserCreationAttributes extends Optional<
+  UserAttributes,
+  | "id"
+  | "lastName"
+  | "documentType"
+  | "documentNumber"
+  | "birthDate"
+  | "phone"
+  | "cityId"
+  | "favoriteCinemaId"
+  | "userGenreId"
+  | "acceptDataProcessing"
+  | "acceptTerms"
+  | "acceptCommercialCommunications"
+  | "emailVerified"
+  | "accountStatus"
+  | "registeredAt"
+  | "failedLoginAttempts"
+  | "lockedUntil"
+> {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
   public id!: number;
   public name!: string;
   public lastName!: string | null;

@@ -44,6 +44,10 @@ import { seedUserGenres } from "./user-genre.seed";
 import { seedUsers } from "./user.seed";
 import { seedPremiereNotifications } from "./premiere-notification.seed";
 import { seedUserMemberships } from "./user-membership.seed";
+import { seedSeats } from "./seat.seed";
+import { roomSeedData } from "./room.seed";
+import { seedNotificationPreferences } from "./notification-preference.seed";
+import { seedNotificationHistories } from "./notification-history.seed";
 import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
 import { seedTestReservationEntries } from "./reservation-entry.seed";
 import { seedCategories } from "./category.seed";
@@ -70,6 +74,7 @@ async function runSeeders(): Promise<void> {
   // Infraestructura física
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
+  await seedSeats(roomIds, roomSeedData);
   const seatIdsByKey = await seedSeats(roomIds, roomSeedData);
 
   // Catálogo de películas y funciones
@@ -81,6 +86,7 @@ async function runSeeders(): Promise<void> {
   const membershipIds = await seedMemberships();
   await seedUserGenres();
 
+  // Usuarios, membresías y notificaciones (HU-005, HU-006, HU-015)
   const categoryIds = await seedCategories();
   await seedProducts(categoryIds);
 
@@ -88,6 +94,8 @@ async function runSeeders(): Promise<void> {
   const userIds = await seedUsers(roleIds, membershipIds);
   await seedUserMemberships(userIds, membershipIds);
   await seedPremiereNotifications(userIds, movieIds);
+  await seedNotificationPreferences(userIds);
+  await seedNotificationHistories(userIds);
 
 
   if (process.env.NODE_ENV !== "production") {
