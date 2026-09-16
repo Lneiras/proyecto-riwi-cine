@@ -37,7 +37,7 @@ class EmailService {
   async sendActivationEmail(data: ActivationEmailData): Promise<void> {
     const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
       .replace(/\/$/, "");
-    const activationUrl = `${baseUrl}/users/auth/verify-email?token=${encodeURIComponent(data.token)}`;
+    const activationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
 
     await this.send({
       to: data.to,
@@ -60,7 +60,7 @@ class EmailService {
   async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
     const baseUrl = (process.env.APP_PUBLIC_URL || `http://localhost:${process.env.APP_PORT || 3000}`)
       .replace(/\/$/, "");
-    const resetUrl = `${baseUrl}/users/auth/reset-password?token=${encodeURIComponent(data.token)}`;
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${encodeURIComponent(data.token)}`;
 
     await this.send({
       to: data.to,

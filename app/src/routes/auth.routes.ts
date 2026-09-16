@@ -1,53 +1,39 @@
-// app/src/routes/user.routes.ts
+// app/src/routes/auth.routes.ts
 
 /**
- * Rutas de Usuario
- * ----------------
- * Este archivo define las rutas HTTP relacionadas con la entidad `User`.
- * La autenticación vive en `auth.routes.ts` (prefijo `/auth`).
+ * Rutas de Autenticación
+ * ----------------------
+ * Endpoints exclusivos de autenticación y gestión de sesión (HU-006/HU-007).
+ * Se mantienen separados de las rutas de usuarios.
  *
  * Endpoints disponibles:
- *  - `POST /users/`          : Crear un nuevo usuario.
- *  - `GET /users/`           : Obtener todos los usuarios registrados.
- *  - `PATCH /users/location` : Cambiar la ciudad del usuario autenticado.
- *  - `GET /users/{id}`       : Obtener un usuario por ID.
+ *  - `POST /auth/register`         : Registro público y membresía digital (HU-006).
+ *  - `POST /auth/verify-email`     : Activar cuenta con token temporal (HU-006).
+ *  - `GET  /auth/verify-email`     : Enlace clickeable del correo (HU-006).
+ *  - `POST /auth/login`            : Inicio de sesión seguro (HU-007).
+ *  - `POST /auth/logout`           : Cerrar sesión revocando el refresh token (HU-007).
+ *  - `POST /auth/forgot-password`  : Solicitar recuperación de contraseña (HU-007).
+ *  - `POST /auth/reset-password`   : Restablecer contraseña con token (HU-007).
+ *  - `POST /auth/refresh`          : Renovar tokens mediante refresh token (HU-007).
  */
 
 import { Router } from "express";
-import { authenticate } from "../middlewares/auth";
+import { register, verifyEmail } from "../controllers/auth.controller";
+import { Auth, refreshTokens, logout, forgotPassword, resetPassword } from "../controllers/user.controller";
 import {
-  createUser,
-  getUsers,
-  changeUserLocation,
-  getUsersbyId,
-} from "../controllers/user.controller";
+  registerRateLimiter,
+  verifyEmailRateLimiter,
+  loginRateLimiter,
+} from "../middlewares/rateLimit";
 
 const router = Router();
 
 /**
  * @swagger
- * /api/users:
- *   get:
- *     summary: Obtener todos los usuarios
- *     tags: [Users]
- *     responses:
- *       200:
- *         description: Lista de usuarios obtenida exitosamente
- *       500:
- *         description: Error interno del servidor
- */
-router.get("/", getUsers);
-
-// ============================================================================
-// Autenticación (HU-006 registro/activación + HU-007 login seguro)
-// ============================================================================
-
-/**
- * @swagger
- * /api/users/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Registrar usuario y crear membresía digital (HU-006)
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -123,7 +109,7 @@ router.get("/", getUsers);
  *                 example: false
  *               captchaToken:
  *                 type: string
- *                 description: "0x4AAAAAAEVnSUPFjjtKsLG4orWfdyKXFdw"
+ *                 description: Token generado por Cloudflare Turnstile
  *     responses:
  *       201:
  *         description: Usuario y membresía creados; correo de activación procesado
@@ -134,14 +120,14 @@ router.get("/", getUsers);
  *       429:
  *         description: Demasiados intentos
  */
-router.post("/auth/register", registerRateLimiter, register);
+router.post("/register", registerRateLimiter, register);
 
 /**
  * @swagger
- * /api/users/auth/verify-email:
+ * /auth/verify-email:
  *   post:
  *     summary: Activar cuenta mediante token temporal (HU-006)
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -158,21 +144,21 @@ router.post("/auth/register", registerRateLimiter, register);
  *       400:
  *         description: Token inválido, usado o expirado
  */
-router.post("/auth/verify-email", verifyEmailRateLimiter, verifyEmail);
+router.post("/verify-email", verifyEmailRateLimiter, verifyEmail);
 
 // Ruta auxiliar para que el enlace enviado por correo sea clickeable directamente.
-router.get("/auth/verify-email", verifyEmailRateLimiter, verifyEmail);
+router.get("/verify-email", verifyEmailRateLimiter, verifyEmail);
 
 /**
  * @swagger
- * /api/users/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Inicio de sesión seguro (HU-007)
  *     description: >
  *       Emite Access Token (15 min) y Refresh Token (7 días). Invalida el refresh token
  *       anterior. Bloquea la cuenta por 15 minutos tras 5 intentos fallidos consecutivos.
  *       Rechaza cuentas con correo sin verificar.
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -201,49 +187,14 @@ router.get("/auth/verify-email", verifyEmailRateLimiter, verifyEmail);
  *       429:
  *         description: Demasiados intentos desde esta IP
  */
-router.post("/auth/login", loginRateLimiter, Auth);
-
-// Alias corto del login para compatibilidad con clientes existentes.
-/**
- * @swagger
- * /api/users/auth:
- *   post:
- *     summary: Iniciar sesión (alias de /users/auth/login) (HU-007)
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: "juan@correo.com"
- *               password:
- *                 type: string
- *                 example: "password123"
- *     responses:
- *       200:
- *         description: Usuario autenticado con accessToken y refreshToken
- *       401:
- *         description: Credenciales inválidas
- *       403:
- *         description: Correo sin verificar
- *       423:
- *         description: Cuenta bloqueada temporalmente
- */
-router.post("/auth", loginRateLimiter, Auth);
+router.post("/login", loginRateLimiter, Auth);
 
 /**
  * @swagger
- * /api/users/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Cerrar sesión revocando el refresh token (HU-007)
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -260,15 +211,15 @@ router.post("/auth", loginRateLimiter, Auth);
  *       400:
  *         description: Falta refreshToken
  */
-router.post("/auth/logout", logout);
+router.post("/logout", logout);
 
 /**
  * @swagger
- * /api/users/auth/forgot-password:
+ * /auth/forgot-password:
  *   post:
  *     summary: Solicitar recuperación de contraseña (HU-007)
  *     description: Envía un enlace con token temporal (30 min) si el correo está registrado. La respuesta siempre es genérica.
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -287,15 +238,15 @@ router.post("/auth/logout", logout);
  *       400:
  *         description: Falta el correo electrónico
  */
-router.post("/auth/forgot-password", forgotPassword);
+router.post("/forgot-password", forgotPassword);
 
 /**
  * @swagger
- * /api/users/auth/reset-password:
+ * /auth/reset-password:
  *   post:
  *     summary: Restablecer contraseña con token temporal (HU-007)
  *     description: Revoca todas las sesiones activas del usuario tras el cambio.
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -315,14 +266,14 @@ router.post("/auth/forgot-password", forgotPassword);
  *       400:
  *         description: Token inválido/usado/expirado o contraseña débil
  */
-router.post("/auth/reset-password", resetPassword);
+router.post("/reset-password", resetPassword);
 
 /**
  * @swagger
- * /api/users/refresh:
+ * /auth/refresh:
  *   post:
  *     summary: Renovar tokens de acceso mediante refresh token (HU-007 Escenario 4)
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -342,63 +293,5 @@ router.post("/auth/reset-password", resetPassword);
  *         description: Token de refresco inválido o expirado
  */
 router.post("/refresh", refreshTokens);
-
-/**
- * @swagger
- * /api/users/location:
- *   patch:
- *     summary: Cambia la ubicación (ciudad) del usuario autenticado
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - location
- *             properties:
- *               location:
- *                 type: string
- *                 description: Nombre de la ciudad
- *                 example: Barranquilla
- *     responses:
- *       200:
- *         description: Ubicación actualizada exitosamente
- *       400:
- *         description: Falta el campo location o no hay sesión activa
- *       401:
- *         description: Token inválido o ausente
- *       404:
- *         description: Ciudad no encontrada
- *       500:
- *         description: Error interno del servidor
- */
-router.patch("/location", authenticate, changeUserLocation);
-
-/**
- * @swagger
- * /api/users/{id}:
- *   get:
- *     summary: Obtener un usuario por ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID del usuario a obtener
- *     responses:
- *       200:
- *         description: Usuario obtenido exitosamente
- *       404:
- *         description: Usuario no encontrado
- *       500:
- *         description: Error interno del servidor
- */
-router.get("/:id", getUsersbyId);
 
 export default router;
