@@ -7,6 +7,7 @@ import {
   Seat,
   SeatLock,
   ReservationEntry,
+  Reservation,
   Showtime,
 } from "../models";
 
@@ -34,26 +35,33 @@ class SeatRepository {
   }
 
   async findSoldSeatIds(
-    showtimeId: number,
-    transaction?: Transaction
-  ): Promise<number[]> {
-    const rows =
-      await ReservationEntry.findAll({
-        attributes: [
-          "seatId",
-        ],
+  showtimeId: number,
+  transaction?: Transaction
+): Promise<number[]> {
+  const rows = await ReservationEntry.findAll({
+    attributes: ["seatId"],
 
+    where: {
+      showtimeId,
+    },
+
+    include: [
+      {
+        model: Reservation,
         where: {
-          showtimeId,
+          status: "Pagada",
         },
+        attributes: [],
+      },
+    ],
 
-        transaction,
-      });
+    transaction,
+  });
 
-    return rows.map(
-      (row) => row.seatId
-    );
-  }
+  return rows.map(
+    (row) => row.seatId
+  );
+}
 
   async findActiveLocks(
     showtimeId: number
