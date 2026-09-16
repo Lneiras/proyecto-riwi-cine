@@ -56,8 +56,9 @@ export async function seedShowtimes(
   roomIdsByKey: Map<string, number>,
   formatIdsByName: Map<string, number>,
   languageIdsByName: Map<string, number>
-): Promise<void> {
+): Promise<Map<string, number>> {
   let count = 0;
+  const showtimeIdsByKey = new Map<string, number>();
 
   for (const data of showtimeSeedData) {
     const movieId = movieIdsByTitle.get(data.movieTitle);
@@ -72,12 +73,16 @@ export async function seedShowtimes(
 
     const dateTime = nextDateAt(data.dayOffset, data.hour, data.minute);
 
-    const [, created] = await Showtime.findOrCreate({
+    const [showtime, created] = await Showtime.findOrCreate({
       where: { movieId, roomId, dateTime },
       defaults: { movieId, roomId, formatId, languageId, dateTime, basePrice: data.basePrice },
     });
     if (created) count++;
+
+    const key = `${data.movieTitle}|${data.cinemaName}|${data.roomNumberName}|${data.dayOffset}|${data.hour}:${data.minute}`;
+    showtimeIdsByKey.set(key, showtime.id);
   }
 
   console.log(`✔ showtimes: ${count} registros nuevos creados (${showtimeSeedData.length} definidos en el seed)`);
+  return showtimeIdsByKey;
 }

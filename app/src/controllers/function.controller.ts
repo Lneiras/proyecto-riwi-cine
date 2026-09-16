@@ -6,10 +6,10 @@ function isValidId(id: string): boolean {
 }
 
 function handleFunctionError(error: any, res: Response){
-    if(error.message = "Function not found"){
+    if(error.message === "Function not found"){
         return res.status(404).json({message: "Funcion no encontrada"});
     }
-    if(error.message = "Function already started"){
+    if(error.message === "Function already started"){
         return res.status(409).json({message: "Esta funcion ya inició y no puede seleccionarse"});
     }
 

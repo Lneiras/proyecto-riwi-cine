@@ -20,7 +20,14 @@ import {
   getUsers,
   changeUserLocation,
   getUsersbyId,
+  Auth,
+  logout,
+  forgotPassword,
+  resetPassword,
+  refreshTokens,
 } from "../controllers/user.controller";
+import { loginRateLimiter, registerRateLimiter, verifyEmailRateLimiter } from "../middlewares/rateLimit";
+import { register, verifyEmail } from "../controllers/auth.controller";
 
 const router = Router();
 

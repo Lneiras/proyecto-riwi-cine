@@ -49,6 +49,7 @@ import { roomSeedData } from "./room.seed";
 import { seedNotificationPreferences } from "./notification-preference.seed";
 import { seedNotificationHistories } from "./notification-history.seed";
 import { seedSeats, } from "./seat.seed"; import { roomSeedData, } from "./room.seed";
+import { seedTestReservationEntries } from "./reservation-entry.seed";
 import { seedCategories } from "./category.seed";
 import { seedProducts } from "./product.seed";
 
@@ -74,10 +75,11 @@ async function runSeeders(): Promise<void> {
   const cinemaIds = await seedCinemas(cityIds);
   const roomIds = await seedRooms(cinemaIds);
   await seedSeats(roomIds, roomSeedData);
+  const seatIdsByKey = await seedSeats(roomIds, roomSeedData);
 
   // Catálogo de películas y funciones
   const movieIds = await seedMovies(genreIds, statusIds);
-  await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
+  const showtimeIdsByKey = await seedShowtimes(movieIds, roomIds, formatIds, languageIds);
 
   // Catálogos del perfil de usuario
   const roleIds = await seedRoles();
@@ -94,6 +96,11 @@ async function runSeeders(): Promise<void> {
   await seedPremiereNotifications(userIds, movieIds);
   await seedNotificationPreferences(userIds);
   await seedNotificationHistories(userIds);
+
+
+  if (process.env.NODE_ENV !== "production") {
+    await seedTestReservationEntries(showtimeIdsByKey, seatIdsByKey);
+  }
 
   console.log("\n✅ Seed completado con éxito.");
 }
